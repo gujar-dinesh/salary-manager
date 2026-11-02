@@ -1,6 +1,7 @@
 class Employee < ApplicationRecord
-  EMPLOYMENT_TYPES = %w[full_time part_time contractor].freeze
   USD_SALARY = "employees.salary * exchange_rates.usd_rate".freeze
+
+  enum :employment_type, { full_time: "full_time", part_time: "part_time", contractor: "contractor" }, validate: true
 
   has_many :salary_changes, -> { order(created_at: :desc, id: :desc) }, dependent: :delete_all
 
@@ -17,7 +18,6 @@ class Employee < ApplicationRecord
                     format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :country, presence: true, inclusion: { in: Country.names }
   validates :salary, presence: true, numericality: { greater_than: 0, less_than: 10_000_000_000 }
-  validates :employment_type, inclusion: { in: EMPLOYMENT_TYPES }
   validate :hire_date_not_in_future
 
   before_validation :set_currency

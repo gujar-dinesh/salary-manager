@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_02_070618) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_02_074320) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -37,6 +37,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_070618) do
     t.index ["hire_date"], name: "index_employees_on_hire_date"
     t.index ["job_title"], name: "index_employees_on_job_title"
     t.index ["salary"], name: "index_employees_on_salary"
+    t.check_constraint "employment_type::text = ANY (ARRAY['full_time'::character varying, 'part_time'::character varying, 'contractor'::character varying]::text[])", name: "employees_employment_type_valid"
+    t.check_constraint "salary > 0::numeric", name: "employees_salary_positive"
   end
 
   create_table "exchange_rates", force: :cascade do |t|
@@ -54,6 +56,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_070618) do
     t.string "currency", null: false
     t.datetime "created_at", null: false
     t.index ["employee_id"], name: "index_salary_changes_on_employee_id"
+    t.check_constraint "old_salary > 0::numeric AND new_salary > 0::numeric", name: "salary_changes_salaries_positive"
   end
 
   add_foreign_key "salary_changes", "employees", on_delete: :cascade

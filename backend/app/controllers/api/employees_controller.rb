@@ -46,7 +46,7 @@ module Api
         countries: Country.names,
         departments: Employee.distinct.order(:department).pluck(:department),
         job_titles: Employee.distinct.order(:job_title).pluck(:job_title),
-        employment_types: Employee::EMPLOYMENT_TYPES
+        employment_types: Employee.employment_types.keys
       }
     end
 

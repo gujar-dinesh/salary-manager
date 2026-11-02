@@ -55,6 +55,28 @@ RSpec.describe Employee do
     expect(build(:employee, employment_type: "contractor")).to be_valid
   end
 
+  it "exposes employment type helpers" do
+    employee = build(:employee, employment_type: "contractor")
+
+    expect(employee).to be_contractor
+    expect(Employee.employment_types.keys).to eq(%w[full_time part_time contractor])
+  end
+
+  describe "database constraints" do
+    let(:row) do
+      { full_name: "Raw Insert", email: "raw@acme.test", job_title: "Engineer", department: "Engineering",
+        country: "India", currency: "INR", salary: 100, employment_type: "full_time", hire_date: "2024-01-01" }
+    end
+
+    it "rejects a non-positive salary even when validations are skipped" do
+      expect { Employee.insert_all!([ row.merge(salary: 0) ]) }.to raise_error(ActiveRecord::CheckViolation)
+    end
+
+    it "rejects an unknown employment type even when validations are skipped" do
+      expect { Employee.insert_all!([ row.merge(employment_type: "intern") ]) }.to raise_error(ActiveRecord::CheckViolation)
+    end
+  end
+
   it "rejects a hire date in the future" do
     expect(build(:employee, hire_date: Date.current + 1)).not_to be_valid
   end
