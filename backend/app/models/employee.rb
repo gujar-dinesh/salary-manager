@@ -4,6 +4,8 @@ class Employee < ApplicationRecord
   enum :employment_type, { full_time: "full_time", part_time: "part_time", contractor: "contractor" }, validate: true
 
   belongs_to :country
+  belongs_to :department, validate: true
+  belongs_to :job_title, validate: true
   has_one :exchange_rate, through: :country
   has_many :salary_changes, -> { order(created_at: :desc, id: :desc) }, dependent: :delete_all
 
@@ -12,9 +14,9 @@ class Employee < ApplicationRecord
   delegate :currency, to: :country, allow_nil: true
 
   normalizes :email, with: ->(email) { email.strip.downcase }
-  normalizes :full_name, :job_title, :department, with: ->(value) { value.squish }
+  normalizes :full_name, with: ->(value) { value.squish }
 
-  validates :full_name, :job_title, :department, presence: true, length: { maximum: 100 }
+  validates :full_name, presence: true, length: { maximum: 100 }
   validates :hire_date, presence: true
   validates :email, presence: true, uniqueness: true, length: { maximum: 254 },
                     format: { with: URI::MailTo::EMAIL_REGEXP }

@@ -2,8 +2,8 @@ class SalaryStatistics
   # Group name => [association to join, column holding the label]
   GROUPS = {
     country: [ :country, "countries.name" ],
-    job_title: [ nil, "employees.job_title" ],
-    department: [ nil, "employees.department" ]
+    job_title: [ :job_title, "job_titles.name" ],
+    department: [ :department, "departments.name" ]
   }.freeze
 
   def self.by_country
@@ -19,7 +19,7 @@ class SalaryStatistics
     raise ArgumentError, "can't group by #{group}" unless GROUPS.key?(group)
 
     association, @label = GROUPS[group]
-    @scope = association ? scope.joins(association) : scope
+    @scope = scope.joins(association)
   end
 
   def rows

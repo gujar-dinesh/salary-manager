@@ -9,7 +9,7 @@ module Api
       pagination = Pagination.new(page: params[:page], per_page: params[:per_page])
 
       render json: {
-        employees: pagination.apply(search.scope).preload(:country).map { |employee| EmployeeSerializer.new(employee) },
+        employees: pagination.apply(search.scope).preload(:country, :department, :job_title).map { |employee| EmployeeSerializer.new(employee) },
         meta: pagination.meta(search.count)
       }
     end
@@ -44,8 +44,8 @@ module Api
     def options
       render json: {
         countries: Country.order(:name).pluck(:name),
-        departments: Employee.distinct.order(:department).pluck(:department),
-        job_titles: Employee.distinct.order(:job_title).pluck(:job_title),
+        departments: Department.order(:name).pluck(:name),
+        job_titles: JobTitle.order(:name).pluck(:name),
         employment_types: Employee.employment_types.keys
       }
     end
@@ -53,7 +53,7 @@ module Api
     private
 
     def set_employee
-      @employee = Employee.includes(:country).find(params[:id])
+      @employee = Employee.includes(:country, :department, :job_title).find(params[:id])
     end
 
     def employee_attributes

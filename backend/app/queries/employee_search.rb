@@ -21,8 +21,8 @@ class EmployeeSearch
   def filtered
     scope = Employee.all
     scope = scope.where(country_id: Country.where(name: params[:country]).select(:id)) if params[:country].present?
-    scope = scope.where(department: params[:department]) if params[:department].present?
-    scope = scope.where(job_title: params[:job_title]) if params[:job_title].present?
+    scope = scope.where(department_id: Department.where(name: params[:department]).select(:id)) if params[:department].present?
+    scope = scope.where(job_title_id: JobTitle.where(name: params[:job_title]).select(:id)) if params[:job_title].present?
 
     if params[:q].present?
       term = "%#{Employee.sanitize_sql_like(params[:q].strip.first(MAX_QUERY_LENGTH))}%"

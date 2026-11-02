@@ -67,8 +67,8 @@ RSpec.describe Employee do
 
   describe "database constraints" do
     let(:row) do
-      { full_name: "Raw Insert", email: "raw@acme.test", job_title: "Engineer", department: "Engineering",
-        country_id: Country.find_by!(name: "India").id, salary: 100, employment_type: "full_time", hire_date: "2024-01-01" }
+      { full_name: "Raw Insert", email: "raw@acme.test", job_title_id: JobTitle.create!(name: "Engineer").id,
+        department_id: Department.create!(name: "Engineering").id, country_id: Country.find_by!(name: "India").id, salary: 100, employment_type: "full_time", hire_date: "2024-01-01" }
     end
 
     it "rejects a non-positive salary even when validations are skipped" do
@@ -101,7 +101,7 @@ RSpec.describe Employee do
     end
 
     it "does not record a change when other fields change" do
-      employee.update!(job_title: "Senior Software Engineer")
+      employee.update!(job_title: JobTitle.named("Senior Software Engineer"))
       expect(employee.salary_changes).to be_empty
     end
 

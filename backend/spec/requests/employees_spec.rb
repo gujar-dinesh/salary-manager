@@ -126,6 +126,25 @@ RSpec.describe "Employees API", type: :request do
     end
   end
 
+  it "reuses an existing department and job title regardless of case" do
+    create(:employee, department: "Engineering", job_title: "Software Engineer")
+
+    expect {
+      post "/api/employees", params: { employee: attributes_for(:employee).merge(country: "India", department: " engineering ",
+                                                                                job_title: "SOFTWARE ENGINEER") }
+    }.not_to change { [ Department.count, JobTitle.count ] }
+
+    expect(json).to include("department" => "Engineering", "job_title" => "Software Engineer")
+  end
+
+  it "creates a job title that does not exist yet" do
+    post "/api/employees", params: { employee: attributes_for(:employee).merge(country: "India", department: "Engineering",
+                                                                              job_title: "Staff Engineer") }
+
+    expect(response).to have_http_status(:created)
+    expect(JobTitle.pluck(:name)).to include("Staff Engineer")
+  end
+
   it "rejects an unknown country" do
     post "/api/employees", params: { employee: attributes_for(:employee).merge(country: "Atlantis") }
 

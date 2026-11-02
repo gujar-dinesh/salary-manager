@@ -48,7 +48,10 @@ class EmployeeSeeder
     Employee.transaction do
       SalaryChange.delete_all
       Employee.delete_all
+      JobTitle.delete_all
+      Department.delete_all
       ReferenceData.load
+      create_departments_and_job_titles
       @country_ids = Country.pluck(:name, :id).to_h
       @usd_rates = Country.joins(:exchange_rate).pluck(:name, :usd_rate).to_h.transform_values(&:to_f)
 
@@ -60,6 +63,11 @@ class EmployeeSeeder
 
   private
 
+  def create_departments_and_job_titles
+    @department_ids = JOBS.keys.to_h { |name| [ name, Department.create!(name: name).id ] }
+    @job_title_ids = JOBS.values.flat_map(&:keys).uniq.to_h { |name| [ name, JobTitle.create!(name: name).id ] }
+  end
+
   def build_row(index, now)
     first = FIRST_NAMES.sample(random: @random)
     last = LAST_NAMES.sample(random: @random)
@@ -70,8 +78,8 @@ class EmployeeSeeder
     {
       full_name: "#{first} #{last}",
       email: "#{first}.#{last}#{index + 1}@acme.com".downcase,
-      job_title: job_title,
-      department: department,
+      job_title_id: @job_title_ids.fetch(job_title),
+      department_id: @department_ids.fetch(department),
       country_id: @country_ids.fetch(country),
       salary: local_salary(base_salary, country),
       employment_type: pick_employment_type,

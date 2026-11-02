@@ -1,5 +1,6 @@
 class PayrollReport
-  GROUPS = { country: "countries.name", department: "employees.department" }.freeze
+  # Group name => [extra association to join, column holding the label]. Country is already joined for the rate.
+  GROUPS = { country: [ nil, "countries.name" ], department: [ :department, "departments.name" ] }.freeze
 
   def self.overview
     report = new
@@ -16,8 +17,12 @@ class PayrollReport
   def totals_by(column)
     raise ArgumentError, "can't group by #{column}" unless GROUPS.key?(column)
 
-    label = Arel.sql(GROUPS[column])
-    Employee.with_usd_salary
+    association, label = GROUPS[column]
+    label = Arel.sql(label)
+    scope = Employee.with_usd_salary
+    scope = scope.joins(association) if association
+
+    scope
             .group(label)
             .order(label)
             .pluck(label, Arel.sql("COUNT(*)"), Arel.sql("SUM(#{Employee::USD_SALARY})"),
