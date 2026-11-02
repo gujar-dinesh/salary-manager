@@ -1,6 +1,6 @@
 module Api
   class EmployeesController < ApplicationController
-    rate_limit to: 60, within: 1.minute, only: %i[create update destroy]
+    rate_limit to: ENV.fetch("WRITE_RATE_LIMIT", 60).to_i, within: 1.minute, only: %i[create update destroy]
 
     before_action :set_employee, only: %i[show update destroy]
 
