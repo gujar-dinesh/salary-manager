@@ -33,10 +33,15 @@ existing rows, so they work on a database that already holds data.
 Integrity is enforced by the database, not only by Rails, because bulk inserts (the seeder, a future import)
 skip validations:
 
-- foreign keys on every reference, including `countries.currency -> exchange_rates.currency`, so every
-  employee has an exchange rate and USD reports never silently drop people
-- check constraints: `salary > 0`, `employment_type` in the allowed values, positive salaries in history
-- unique indexes: email, country code and name, department and job title names (case-insensitive)
+- foreign keys on every reference, including `countries.currency` and `salary_changes.currency` to
+  `exchange_rates`, so every employee has an exchange rate and USD reports never silently drop people
+- check constraints: `salary > 0`, `employment_type` in the allowed values, positive salaries in history,
+  positive exchange rates, email shape, no blank names, ISO formats for country (`AB`) and currency (`ABC`) codes
+- column limits matching the validations (names 100, email 254, currency 3)
+- unique indexes: email, department and job title names (all case-insensitive), country code and name
+- `spec/models/database_constraints_spec.rb` proves each rule by attempting raw inserts that skip Rails
+
+"Hire date not in the future" stays in Rails: Postgres check constraints must be immutable, and "today" is not.
 - reference rows cannot be deleted while employees use them (`restrict_with_error`)
 
 Intentional redundancy, kept on purpose:
@@ -156,6 +161,36 @@ Sorting by salary without a country filter used to compare raw numbers, so a ¥2
 $237,000. Across countries the list now sorts by the USD equivalent (join on `exchange_rates`); within a
 single country it sorts by the local amount and uses the `(country, salary)` index.
 
+## Concurrency
+
+A probe with parallel requests found three bugs, all fixed test-first:
+
+| Problem under parallel use | Fix |
+|----------------------------|-----|
+| Two HR users edit the same employee; the second save silently reverts the first (including salary) | Optimistic locking (`lock_version`). A stale save gets `409`, and the form asks the user to reload |
+| Two requests add the same new job title; one got a 500 | The lookup is created at resolution time inside the employee's transaction; the unique index picks a winner and the loser reads its row |
+| Two requests add the same email; one got a 500 | The save is retried once, so the conflict becomes a normal "has already been taken" error |
+
+The races are reproduced deterministically in `spec/requests/employee_races_spec.rb` by committing the
+competing row at the exact point a parallel request would. An e2e test edits one employee from two tabs.
+
+### Load test
+
+`backend/script/load_test.rb` runs mixed reads, many clients raising the same salary at once, and parallel
+creates that share new job titles and emails, then checks invariants and exits non-zero if any break.
+
+Results on a laptop (development mode, disposable database):
+
+| Setup | Reads | Contended raises | Parallel creates |
+|-------|-------|------------------|------------------|
+| 1 process x 3 threads, 40 clients | 1,000 OK, p95 128 ms | 40/40 saved, salary and history exact | 35 created, 5 duplicate emails rejected, no 500s |
+| 4 processes x 3 threads, 100 clients | 2,500 OK, p95 158 ms | 100/100 saved, salary and history exact | 95 created, 5 rejected, no 500s |
+
+Latency at these levels is queueing for 3 threads per process, not slow queries. Throughput scales by adding
+Puma workers (`WEB_CONCURRENCY`); database connections stay bounded at workers x threads (12 in the second run),
+well under Postgres' limit. These numbers show correctness under contention, not production capacity: that
+needs a production build on real hardware.
+
 ## Security
 
 - Brakeman, bundler-audit and npm audit report no issues.
@@ -163,7 +198,9 @@ single country it sorts by the local amount and uses the `(country, salary)` ind
 - All SQL uses bound parameters; the few interpolated fragments come from fixed whitelists.
 - Input bounds: text fields up to 100 characters (email 254), salary below the column's precision, search terms
   truncated to 100 characters, page size capped at 100.
-- Write endpoints are rate limited (60 requests per minute per client).
+- Write endpoints are rate limited (60 requests per minute per client, `WRITE_RATE_LIMIT` to change). The limit
+  is per IP, so an office behind one address shares it; per-user limits need authentication. With several Puma
+  workers the counter needs a shared cache (Solid Cache or Redis), otherwise each process counts separately.
 - Production config forces SSL. React escapes all rendered values; no raw HTML is used.
 - **Known gap: no authentication.** It was left out of scope deliberately (see requirements), and it is the
   first thing to add before real use: salary data is sensitive.

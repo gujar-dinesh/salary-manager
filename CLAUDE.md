@@ -15,6 +15,7 @@ Requirements, design and trade-offs are in `docs/`.
 - Backend: `cd backend && bundle exec rspec && bin/rubocop && bin/brakeman -q`
 - Frontend: `cd frontend && npm test && npm run build && npm run lint`
 - E2E: `cd frontend && npm run e2e` (own database `salary_manager_e2e`, ports 3100/5180)
+- Load test: `ruby backend/script/load_test.rb <url> <clients>` against a disposable database (see README)
 - Reset data: `cd backend && bin/rails db:seed`
 
 ## Structure

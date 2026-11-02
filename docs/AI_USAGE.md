@@ -95,3 +95,16 @@ joined with raw SQL instead of an association; a stray `hstore` extension came f
 refactor; job titles are shared across departments.
 **Caught by tests:** Rails `belongs_to` does not validate a new associated record by default, so an over-long
 job title passed validation; fixed with `validate: true`.
+
+### 11. Concurrency, database rules and load
+**My direction:** "Did you try concurrent requests?", "the system should behave exactly right even under
+extreme load", and "did you enforce constraints at the database level?"
+**What testing showed:** parallel reads were fine; parallel writes had three bugs (a stale form silently reverted
+another user's raise, and two kinds of unique conflicts returned 500). Several rules existed only in Rails.
+**Changes:** optimistic locking with a 409 and a clear message; lookups created inside the employee transaction
+so the unique index settles races; one retry for email conflicts; remaining rules moved into the database.
+**Approach I insisted on:** prove it rather than claim it. Races are reproduced deterministically in specs, each
+database rule is tested with raw inserts, and a load test checks invariants (no lost raises, an unbroken
+history chain, one row per job title) at 40 and 100 parallel clients.
+**Caught along the way:** the first race spec showed there were two race windows for lookups, not one, which
+changed the fix from "retry the save" to "let the index decide when resolving the name".

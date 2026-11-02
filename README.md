@@ -60,6 +60,15 @@ npm run e2e
 They cover browsing, search, filters, sorting and pagination, adding an employee (with validation and duplicate
 email), editing a salary and seeing it in the history, deleting an employee, and the insights pages.
 
+Load test with correctness checks (use a disposable database; it creates employees):
+
+```bash
+cd backend
+DATABASE_NAME=salary_manager_load bin/rails db:prepare db:seed
+DATABASE_NAME=salary_manager_load WRITE_RATE_LIMIT=100000 WEB_CONCURRENCY=4 bin/rails server -p 3200
+ruby script/load_test.rb http://localhost:3200 100   # in another terminal
+```
+
 Static checks:
 
 ```bash
