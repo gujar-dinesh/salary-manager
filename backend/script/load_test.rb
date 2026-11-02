@@ -10,6 +10,9 @@ require "json"
 
 BASE = URI(ARGV[0] || "http://localhost:3000")
 THREADS = (ARGV[1] || 40).to_i
+# Scenario 3 shares 5 emails and 3 job titles between clients, so it needs at least 10 of them.
+MIN_THREADS = 10
+abort "Use at least #{MIN_THREADS} parallel clients (got #{THREADS})." if THREADS < MIN_THREADS
 FAILURES = []
 
 def request(method, path, body = nil)
