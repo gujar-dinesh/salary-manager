@@ -34,6 +34,20 @@ class CreateDepartmentsAndJobTitles < ActiveRecord::Migration[8.1]
   end
 
   def down
-    raise ActiveRecord::IrreversibleMigration
+    remove_index :employees, :department_id
+    remove_index :employees, :job_title_id
+    remove_index :employees, [ :country_id, :job_title_id ]
+
+    LOOKUPS.each do |table, column|
+      add_column :employees, column, :string
+      execute "UPDATE employees SET #{column} = #{table}.name FROM #{table} WHERE #{table}.id = employees.#{column}_id"
+      change_column_null :employees, column, false
+      remove_reference :employees, column, foreign_key: true, index: false
+      drop_table table
+    end
+
+    add_index :employees, :department
+    add_index :employees, :job_title
+    add_index :employees, [ :country_id, :job_title ]
   end
 end

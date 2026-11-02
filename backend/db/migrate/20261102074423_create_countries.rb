@@ -37,7 +37,22 @@ class CreateCountries < ActiveRecord::Migration[8.1]
   end
 
   def down
-    raise ActiveRecord::IrreversibleMigration
+    remove_index :employees, [ :country_id, :job_title ]
+    remove_index :employees, [ :country_id, :salary ]
+
+    add_column :employees, :country, :string
+    add_column :employees, :currency, :string
+    execute <<~SQL
+      UPDATE employees SET country = countries.name, currency = countries.currency
+      FROM countries WHERE countries.id = employees.country_id
+    SQL
+    change_column_null :employees, :country, false
+    change_column_null :employees, :currency, false
+    remove_reference :employees, :country, foreign_key: true, index: false
+    drop_table :countries
+
+    add_index :employees, [ :country, :salary ]
+    add_index :employees, [ :country, :job_title ]
   end
 
   private

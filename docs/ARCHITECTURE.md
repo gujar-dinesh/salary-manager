@@ -45,8 +45,9 @@ skip validations:
 It compares with the latest calendar date anywhere (UTC+14), so a user east of UTC can always enter their today.
 
 Seeding replaces all employees, so in production `db:seed` only fills an empty database; replacing existing data
-needs `RESET_DEMO_DATA=1`. Every migration can be rolled back (checked by rolling back and re-migrating to an
-identical schema).
+needs `RESET_DEMO_DATA=1`. Every migration can be rolled back, including the two that moved data into lookup tables: rolling back to
+before the countries table and migrating forward again gives the same data (checksum over every employee's
+country, currency, department, job title and salary) and an equivalent schema.
 - reference rows cannot be deleted while employees use them (`restrict_with_error`)
 
 Intentional redundancy, kept on purpose:
