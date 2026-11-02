@@ -47,7 +47,7 @@ RSpec.describe "Database constraints" do
   it "only records salary history in a known currency" do
     employee = create(:employee)
 
-    expect { raw_insert(SalaryChange, { employee_id: employee.id, old_salary: 1, new_salary: 2, currency: "XXX" }) }
+    expect { raw_insert(SalaryChange, { employee_id: employee.id, old_salary: 1, new_salary: 2, old_currency: "XXX", new_currency: "INR" }) }
       .to raise_error(ActiveRecord::InvalidForeignKey)
   end
 end

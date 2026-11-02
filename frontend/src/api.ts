@@ -3,7 +3,8 @@ export type EmploymentType = 'full_time' | 'part_time' | 'contractor'
 export interface SalaryChange {
   old_salary: number
   new_salary: number
-  currency: string
+  old_currency: string
+  new_currency: string
   created_at: string
 }
 

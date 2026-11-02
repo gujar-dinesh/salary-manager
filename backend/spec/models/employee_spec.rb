@@ -97,7 +97,28 @@ RSpec.describe Employee do
       change = employee.salary_changes.sole
       expect(change.old_salary).to eq(1_000_000)
       expect(change.new_salary).to eq(1_100_000)
-      expect(change.currency).to eq("INR")
+      expect(change.old_currency).to eq("INR")
+      expect(change.new_currency).to eq("INR")
+    end
+
+    it "records each side in its own currency when the employee moves country" do
+      employee.update!(country: Country.find_by!(name: "Germany"), salary: 80_000)
+
+      change = employee.salary_changes.sole
+      expect(change).to have_attributes(old_salary: 1_000_000, old_currency: "INR", new_salary: 80_000, new_currency: "EUR")
+    end
+
+    it "records a move to another currency even when the amount stays the same" do
+      employee.update!(country: Country.find_by!(name: "Germany"))
+
+      expect(employee.salary_changes.sole).to have_attributes(old_currency: "INR", new_currency: "EUR")
+    end
+
+    it "does not record a move between countries that share a currency" do
+      employee = create(:employee, country: "France", salary: 60_000)
+      employee.update!(country: Country.find_by!(name: "Germany"))
+
+      expect(employee.salary_changes).to be_empty
     end
 
     it "does not record a change when other fields change" do

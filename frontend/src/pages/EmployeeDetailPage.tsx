@@ -3,7 +3,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { api, type Employee, type EmployeeInput } from '../api'
+import { api, type Employee, type EmployeeInput, type SalaryChange } from '../api'
 import { EmployeeForm } from '../components/EmployeeForm'
 import { formatEmploymentType, formatMoney } from '../format'
 
@@ -12,8 +12,9 @@ function toInput(employee: Employee): EmployeeInput {
   return { full_name, email, job_title, department, country, salary, employment_type, hire_date, lock_version }
 }
 
-function percentChange(from: number, to: number) {
-  const change = ((to - from) / from) * 100
+function describeChange({ old_salary, new_salary, old_currency, new_currency }: SalaryChange) {
+  if (old_currency !== new_currency) return `${old_currency} to ${new_currency}`
+  const change = ((new_salary - old_salary) / old_salary) * 100
   return `${change > 0 ? '+' : ''}${change.toFixed(1)}%`
 }
 
@@ -105,9 +106,9 @@ export function EmployeeDetailPage() {
             {employee.salary_changes.map((change) => (
               <Table.Tr key={change.created_at}>
                 <Table.Td>{new Date(change.created_at).toLocaleString()}</Table.Td>
-                <Table.Td ta="right">{formatMoney(change.old_salary, change.currency)}</Table.Td>
-                <Table.Td ta="right">{formatMoney(change.new_salary, change.currency)}</Table.Td>
-                <Table.Td ta="right">{percentChange(change.old_salary, change.new_salary)}</Table.Td>
+                <Table.Td ta="right">{formatMoney(change.old_salary, change.old_currency)}</Table.Td>
+                <Table.Td ta="right">{formatMoney(change.new_salary, change.new_currency)}</Table.Td>
+                <Table.Td ta="right">{describeChange(change)}</Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>

@@ -8,7 +8,9 @@ const employee = {
   id: 7, full_name: 'Lena Fischer', email: 'lena@acme.com', job_title: 'Product Manager',
   department: 'Product', country: 'Germany', currency: 'EUR', salary: 88000,
   employment_type: 'full_time', hire_date: '2020-02-03',
-  salary_changes: [{ old_salary: 80000, new_salary: 88000, currency: 'EUR', created_at: '2026-03-01T10:00:00Z' }],
+  salary_changes: [
+    { old_salary: 80000, new_salary: 88000, old_currency: 'EUR', new_currency: 'EUR', created_at: '2026-03-01T10:00:00Z' },
+  ],
 }
 
 function renderPage() {
@@ -29,6 +31,20 @@ describe('EmployeeDetailPage', () => {
     expect(screen.getAllByText('€88,000')).toHaveLength(2)
     expect(screen.getByText('€80,000')).toBeInTheDocument()
     expect(screen.getByText('+10.0%')).toBeInTheDocument()
+  })
+
+  it('shows both currencies instead of a percentage when the currency changed', async () => {
+    const moved = {
+      ...employee,
+      salary_changes: [
+        { old_salary: 2000000, new_salary: 88000, old_currency: 'INR', new_currency: 'EUR', created_at: '2026-03-01T10:00:00Z' },
+      ],
+    }
+    mockFetch({ '/api/employees/options': {}, '/api/employees/7': moved })
+    renderPage()
+
+    expect(await screen.findByText('₹2,000,000')).toBeInTheDocument()
+    expect(screen.getByText('INR to EUR')).toBeInTheDocument()
   })
 
   it('says when there is no salary history', async () => {

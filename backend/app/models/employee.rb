@@ -23,7 +23,7 @@ class Employee < ApplicationRecord
   validates :salary, presence: true, numericality: { greater_than: 0, less_than: 10_000_000_000 }
   validate :hire_date_not_in_future
 
-  after_update :record_salary_change, if: :saved_change_to_salary?
+  after_update :record_salary_change, if: -> { saved_change_to_salary? || saved_change_to_country_id? }
 
   private
 
@@ -31,8 +31,13 @@ class Employee < ApplicationRecord
     errors.add(:hire_date, "can't be in the future") if hire_date&.future?
   end
 
+  # Pay changes when the amount or its currency changes; a move between countries that share a
+  # currency with the same amount is not a pay change.
   def record_salary_change
-    old_salary, new_salary = saved_change_to_salary
-    salary_changes.create!(old_salary: old_salary, new_salary: new_salary, currency: currency)
+    old_currency = saved_change_to_country_id? ? Country.find(country_id_before_last_save).currency : currency
+    return if salary_before_last_save == salary && old_currency == currency
+
+    salary_changes.create!(old_salary: salary_before_last_save, new_salary: salary,
+                           old_currency: old_currency, new_currency: currency)
   end
 end

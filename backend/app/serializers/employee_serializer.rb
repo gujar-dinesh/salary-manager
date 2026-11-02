@@ -29,7 +29,8 @@ class EmployeeSerializer
       {
         old_salary: change.old_salary.to_f,
         new_salary: change.new_salary.to_f,
-        currency: change.currency,
+        old_currency: change.old_currency,
+        new_currency: change.new_currency,
         created_at: change.created_at
       }
     end
