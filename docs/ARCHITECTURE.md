@@ -213,6 +213,12 @@ frontend from one process group, so there is no CORS and one thing to deploy.
 - `docker-compose.yml` adds Postgres 16 with a health check and a volume; the app waits for it and has its own
   health check on `/up`.
 
+Hosting is described in `render.yaml` (Render Blueprint, Singapore region): the same image as a web service with
+`PORT` from the platform, one Puma process (about 110 MB under load, well inside the free plan's 512 MB), and
+a managed Postgres whose URL is injected as `DATABASE_URL`. Before committing it, the setup was rehearsed
+locally with Render's conditions: a pre-created empty database (first boot loaded the schema and seeded), a
+512 MB memory cap, `PORT=10000` and HTTPS enforcement behind a proxy.
+
 Verified against the running containers: the 13 e2e tests pass, the load test holds every invariant with 100
 clients (2 workers), and data survives `docker compose down` / `up` without re-seeding.
 
