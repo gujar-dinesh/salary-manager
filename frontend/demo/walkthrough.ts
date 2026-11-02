@@ -30,7 +30,11 @@ const scenes: Record<string, (page: Page) => Promise<void>> = {
     await pause(page, 600)
     await page.getByRole('button', { name: /Salary/ }).click()
     await pause(page, 2500)
-    await page.goto('/?sort=salary&direction=desc')
+    // Navigate inside the app (a full reload flashes white in the recording), then sort across all countries.
+    await page.getByRole('link', { name: 'Employees' }).click()
+    await page.getByRole('button', { name: /Salary/ }).click()
+    await page.getByRole('button', { name: /Salary/ }).click()
+    await expect(page.getByRole('button', { name: /Salary ▼/ })).toBeVisible()
   },
   add: async (page) => {
     await page.getByRole('button', { name: 'Add employee' }).click()

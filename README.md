@@ -95,6 +95,11 @@ Brakeman and gem audit against Postgres; frontend lint, tests, typechecked build
 suite against a real Rails server; and a Docker build that starts the stack and smoke-tests it. Locally,
 `cd backend && bin/ci` runs the backend checks.
 
+Demo video: `frontend/demo/make-video.sh` builds a narrated walkthrough from `frontend/demo/narration.json`
+(macOS `say` for the voice, Playwright for the recording, ffmpeg to merge) against a fresh Docker stack, and
+writes `frontend/demo/output/salary-manager-demo.mp4`. Edit the narration and rerun; each scene lasts as long
+as its narration. `VOICE=Rishi` picks another voice.
+
 Static checks:
 
 ```bash

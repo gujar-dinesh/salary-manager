@@ -149,3 +149,13 @@ as is and the test kept as a guard.
 typechecked build (and the Docker image), and deep links returning 404 to clients that send `Accept: */*`.
 **Brief check:** everything in the brief is in place except the items that need me: pushing the repository,
 deploying, and recording the demo video.
+
+### 15. Demo video
+**My direction:** "Can a script generate a voice-over video?", then "make the video".
+**Outcome:** `frontend/demo/make-video.sh` records a Playwright walkthrough of the main flows against a freshly
+seeded Docker stack, generates narration with macOS `say` from an editable script, and merges both with ffmpeg.
+Each scene waits for its narration, so the voice stays in sync after edits.
+**Checked rather than assumed:** stills pulled from the video for every scene; speech onsets measured with
+ffmpeg matched the scene timeline within 0.1 s. A one-second white flash from a full page reload was found this
+way and replaced with in-app navigation; the script now reports any content-free frames automatically. `say`
+hung once without a terminal, so each clip now has a time limit and retries.

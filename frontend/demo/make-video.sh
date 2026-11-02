@@ -20,7 +20,12 @@ mkdir -p "$OUT/audio"
 echo "1/4 Generating narration with the '$VOICE' voice"
 node -e 'for (const s of require("./narration.json")) console.log(s.id + "\t" + s.text)' |
   while IFS=$'\t' read -r id text; do
-    say -v "$VOICE" -r "$RATE" -o "$OUT/audio/$id.aiff" "$text"
+    # The macOS speech service occasionally hangs without a terminal: give each clip a time limit and retry.
+    for attempt in 1 2 3; do
+      perl -e 'alarm shift; exec @ARGV' 60 say -v "$VOICE" -r "$RATE" -o "$OUT/audio/$id.aiff" "$text" < /dev/null && break
+      echo "    retrying '$id' (attempt $attempt timed out)"
+      [ "$attempt" = 3 ] && { echo "say kept hanging on '$id'"; exit 1; }
+    done
   done
 node -e '
   const { execSync } = require("child_process")
@@ -59,4 +64,9 @@ AUDIO_INPUTS=$(node -e 'for (const s of require("./output/timeline.json")) conso
 ffmpeg -loglevel error -y -i "$VIDEO" $AUDIO_INPUTS -filter_complex "$FILTER" \
   -map 0:v -map "[voice]" -c:v libx264 -pix_fmt yuv420p -crf 20 -c:a aac -b:a 160k -shortest \
   "$OUT/salary-manager-demo.mp4"
+# Flag frames with no content after the first page load, e.g. a full reload flashing white.
+BLANKS=$(./blank-frames.sh "$OUT/salary-manager-demo.mp4" 3)
+if [ -n "$BLANKS" ]; then
+  echo "Warning: blank frames at these seconds: $BLANKS"
+fi
 echo "Done: frontend/demo/$OUT/salary-manager-demo.mp4"
