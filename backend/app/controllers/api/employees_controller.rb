@@ -6,30 +6,30 @@ module Api
       search = EmployeeSearch.new(params)
 
       render json: {
-        employees: search.results.map { |employee| employee_json(employee) },
+        employees: search.results.map { |employee| EmployeeSerializer.new(employee) },
         meta: { page: search.page, per_page: search.per_page, total: search.total, total_pages: search.total_pages }
       }
     end
 
     def show
-      render json: employee_json(@employee, with_history: true)
+      render json: EmployeeSerializer.new(@employee, with_history: true)
     end
 
     def create
       employee = Employee.new(employee_params)
 
       if employee.save
-        render json: employee_json(employee, with_history: true), status: :created
+        render json: EmployeeSerializer.new(employee, with_history: true), status: :created
       else
-        render json: { errors: employee.errors.to_hash }, status: :unprocessable_content
+        render_errors(employee)
       end
     end
 
     def update
       if @employee.update(employee_params)
-        render json: employee_json(@employee.reload, with_history: true)
+        render json: EmployeeSerializer.new(@employee, with_history: true)
       else
-        render json: { errors: @employee.errors.to_hash }, status: :unprocessable_content
+        render_errors(@employee)
       end
     end
 
@@ -57,19 +57,8 @@ module Api
       params.expect(employee: %i[full_name email job_title department country salary employment_type hire_date])
     end
 
-    def employee_json(employee, with_history: false)
-      json = employee.slice(:id, :full_name, :email, :job_title, :department, :country, :currency,
-                            :employment_type, :hire_date)
-      json[:salary] = employee.salary.to_f
-
-      if with_history
-        json[:salary_changes] = employee.salary_changes.map do |change|
-          { old_salary: change.old_salary.to_f, new_salary: change.new_salary.to_f, currency: change.currency,
-            created_at: change.created_at }
-        end
-      end
-
-      json
+    def render_errors(employee)
+      render json: { errors: employee.errors.to_hash }, status: :unprocessable_content
     end
   end
 end

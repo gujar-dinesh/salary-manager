@@ -117,6 +117,11 @@ RSpec.describe "Employees API", type: :request do
     end
   end
 
+  it "returns 400 when the employee params are missing" do
+    post "/api/employees", params: { name: "x" }
+    expect(response).to have_http_status(:bad_request)
+  end
+
   describe "DELETE /api/employees/:id" do
     it "deletes the employee" do
       employee = create(:employee)
