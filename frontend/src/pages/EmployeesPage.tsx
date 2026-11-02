@@ -3,6 +3,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, type EmployeeInput } from '../api'
+import { refreshEmployeeData } from '../cache'
 import { EmployeeForm } from '../components/EmployeeForm'
 import { EmployeeTable } from '../components/EmployeeTable'
 import { useEmployeeFilters } from '../hooks/useEmployeeFilters'
@@ -22,8 +23,7 @@ export function EmployeesPage() {
   const createEmployee = useMutation({
     mutationFn: (values: EmployeeInput) => api.createEmployee(values),
     onSuccess: (employee) => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] })
-      queryClient.invalidateQueries({ queryKey: ['options'] })
+      refreshEmployeeData(queryClient)
       notifications.show({ message: `${employee.full_name} added` })
       form.close()
     },

@@ -4,6 +4,7 @@ import { notifications } from '@mantine/notifications'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, type Employee, type EmployeeInput, type SalaryChange } from '../api'
+import { refreshEmployeeData } from '../cache'
 import { EmployeeForm } from '../components/EmployeeForm'
 import { formatEmploymentType, formatMoney } from '../format'
 
@@ -32,7 +33,7 @@ export function EmployeeDetailPage() {
     mutationFn: (values: EmployeeInput) => api.updateEmployee(id, values),
     onSuccess: (updated) => {
       queryClient.setQueryData(['employee', id], updated)
-      queryClient.invalidateQueries({ queryKey: ['employees'] })
+      refreshEmployeeData(queryClient)
       notifications.show({ message: 'Employee updated' })
       edit.close()
     },
@@ -41,7 +42,7 @@ export function EmployeeDetailPage() {
   const deleteEmployee = useMutation({
     mutationFn: () => api.deleteEmployee(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] })
+      refreshEmployeeData(queryClient, { deletedId: id })
       notifications.show({ message: `${employee?.full_name} deleted` })
       navigate('/')
     },
