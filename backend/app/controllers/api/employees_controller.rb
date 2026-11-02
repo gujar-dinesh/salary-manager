@@ -9,7 +9,7 @@ module Api
       pagination = Pagination.new(page: params[:page], per_page: params[:per_page])
 
       render json: {
-        employees: pagination.apply(search.scope).map { |employee| EmployeeSerializer.new(employee) },
+        employees: pagination.apply(search.scope).preload(:country).map { |employee| EmployeeSerializer.new(employee) },
         meta: pagination.meta(search.count)
       }
     end
@@ -19,7 +19,7 @@ module Api
     end
 
     def create
-      employee = Employee.new(employee_params)
+      employee = Employee.new(employee_attributes)
 
       if employee.save
         render json: EmployeeSerializer.new(employee, with_history: true), status: :created
@@ -29,7 +29,7 @@ module Api
     end
 
     def update
-      if @employee.update(employee_params)
+      if @employee.update(employee_attributes)
         render json: EmployeeSerializer.new(@employee, with_history: true)
       else
         render_errors(@employee)
@@ -43,7 +43,7 @@ module Api
 
     def options
       render json: {
-        countries: Country.names,
+        countries: Country.order(:name).pluck(:name),
         departments: Employee.distinct.order(:department).pluck(:department),
         job_titles: Employee.distinct.order(:job_title).pluck(:job_title),
         employment_types: Employee.employment_types.keys
@@ -53,11 +53,13 @@ module Api
     private
 
     def set_employee
-      @employee = Employee.find(params[:id])
+      @employee = Employee.includes(:country).find(params[:id])
     end
 
-    def employee_params
-      params.expect(employee: %i[full_name email job_title department country salary employment_type hire_date])
+    def employee_attributes
+      EmployeeAttributes.new(
+        params.expect(employee: %i[full_name email job_title department country salary employment_type hire_date])
+      ).to_h
     end
 
     def render_errors(employee)

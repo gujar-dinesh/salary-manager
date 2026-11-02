@@ -1,25 +1,30 @@
 class SalaryStatistics
+  # Group name => [association to join, column holding the label]
+  GROUPS = {
+    country: [ :country, "countries.name" ],
+    job_title: [ nil, "employees.job_title" ],
+    department: [ nil, "employees.department" ]
+  }.freeze
+
   def self.by_country
-    new(Employee.all, :country).rows.map { |row| row.merge(currency: Country.currency_for(row[:group])) }
+    currencies = Country.pluck(:name, :currency).to_h
+    new(Employee.all, :country).rows.map { |row| row.merge(currency: currencies[row[:group]]) }
   end
 
   def self.by_job_title(country)
-    currency = Country.currency_for(country)
-    new(Employee.where(country: country), :job_title).rows.map { |row| row.merge(currency: currency) }
+    new(Employee.where(country: country), :job_title).rows.map { |row| row.merge(currency: country.currency) }
   end
 
-  GROUPABLE = %i[country job_title department].freeze
+  def initialize(scope, group)
+    raise ArgumentError, "can't group by #{group}" unless GROUPS.key?(group)
 
-  def initialize(scope, column)
-    raise ArgumentError, "can't group by #{column}" unless GROUPABLE.include?(column)
-
-    @scope = scope
-    @column = column
+    association, @label = GROUPS[group]
+    @scope = association ? scope.joins(association) : scope
   end
 
   def rows
-    @scope.group(@column).order(@column).pluck(
-      @column,
+    @scope.group(Arel.sql(@label)).order(Arel.sql(@label)).pluck(
+      Arel.sql(@label),
       Arel.sql("COUNT(*)"),
       Arel.sql("MIN(salary)"),
       Arel.sql("MAX(salary)"),

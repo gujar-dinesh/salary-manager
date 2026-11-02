@@ -20,7 +20,7 @@ class EmployeeSearch
 
   def filtered
     scope = Employee.all
-    scope = scope.where(country: params[:country]) if params[:country].present?
+    scope = scope.where(country_id: Country.where(name: params[:country]).select(:id)) if params[:country].present?
     scope = scope.where(department: params[:department]) if params[:department].present?
     scope = scope.where(job_title: params[:job_title]) if params[:job_title].present?
 
@@ -38,7 +38,7 @@ class EmployeeSearch
 
     # Salaries in different currencies are only comparable once converted to USD.
     if column == "salary" && params[:country].blank?
-      scope.with_usd_salary.order(Arel.sql("#{Employee::USD_SALARY} #{direction} NULLS LAST, employees.id #{direction}"))
+      scope.with_usd_salary.order(Arel.sql("#{Employee::USD_SALARY} #{direction}, employees.id #{direction}"))
     else
       scope.order(column => direction.downcase, id: direction.downcase)
     end

@@ -8,18 +8,19 @@ RSpec.describe EmployeeSeeder do
     expect(Employee.all).to all(be_valid)
   end
 
-  it "creates an exchange rate for every currency used" do
+  it "loads the reference countries and exchange rates" do
     described_class.new(count: 50).run
 
-    expect(ExchangeRate.pluck(:currency)).to match_array(Country.currencies)
+    expect(Country.count).to eq(ReferenceData::COUNTRIES.size)
+    expect(ExchangeRate.pluck(:currency)).to match_array(ReferenceData::USD_RATES.keys)
   end
 
   it "produces the same data on every run" do
     described_class.new(count: 20).run
-    first_run = Employee.order(:email).pluck(:email, :country, :salary)
+    first_run = Employee.order(:email).pluck(:email, :country_id, :salary)
 
     described_class.new(count: 20).run
-    expect(Employee.order(:email).pluck(:email, :country, :salary)).to eq(first_run)
+    expect(Employee.order(:email).pluck(:email, :country_id, :salary)).to eq(first_run)
   end
 
   it "replaces existing employees instead of adding to them" do

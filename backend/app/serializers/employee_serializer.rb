@@ -1,13 +1,22 @@
 class EmployeeSerializer
-  FIELDS = %i[id full_name email job_title department country currency employment_type hire_date].freeze
-
   def initialize(employee, with_history: false)
     @employee = employee
     @with_history = with_history
   end
 
   def as_json(*)
-    json = @employee.slice(*FIELDS).merge("salary" => @employee.salary.to_f)
+    json = {
+      "id" => @employee.id,
+      "full_name" => @employee.full_name,
+      "email" => @employee.email,
+      "job_title" => @employee.job_title,
+      "department" => @employee.department,
+      "country" => @employee.country.name,
+      "currency" => @employee.currency,
+      "salary" => @employee.salary.to_f,
+      "employment_type" => @employee.employment_type,
+      "hire_date" => @employee.hire_date
+    }
     json["salary_changes"] = salary_changes if @with_history
     json
   end

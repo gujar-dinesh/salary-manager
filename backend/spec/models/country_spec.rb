@@ -1,18 +1,26 @@
 require "rails_helper"
 
 RSpec.describe Country do
-  it "maps each supported country to its currency" do
-    expect(described_class.currency_for("Germany")).to eq("EUR")
-    expect(described_class.currency_for("India")).to eq("INR")
-    expect(described_class.currency_for("Atlantis")).to be_nil
+  it "is linked to the exchange rate for its currency" do
+    expect(described_class.find_by!(name: "Germany").exchange_rate.currency).to eq("EUR")
   end
 
-  it "knows which countries are supported" do
-    expect(described_class.supported?("Japan")).to be(true)
-    expect(described_class.supported?("Atlantis")).to be(false)
+  it "requires a two-letter code and unique name" do
+    country = described_class.new(code: "XYZ", name: "India", currency: "INR")
+
+    expect(country).not_to be_valid
+    expect(country.errors.attribute_names).to include(:code, :name)
   end
 
-  it "lists each currency once" do
-    expect(described_class.currencies.count("EUR")).to eq(1)
+  it "cannot use a currency without an exchange rate" do
+    expect { described_class.create!(code: "ZZ", name: "Zedland", currency: "ZZZ") }
+      .to raise_error(ActiveRecord::RecordInvalid)
+  end
+
+  it "cannot be deleted while employees belong to it" do
+    country = create(:employee, country: "Japan").country
+
+    expect(country.destroy).to be(false)
+    expect(country.errors[:base]).to be_present
   end
 end

@@ -25,7 +25,7 @@ RSpec.describe SalaryStatistics do
       create(:employee, country: "India", job_title: "Designer", salary: 80)
       create(:employee, country: "Germany", job_title: "Engineer", salary: 9999)
 
-      result = described_class.by_job_title("India").index_by { |row| row[:group] }
+      result = described_class.by_job_title(Country.find_by!(name: "India")).index_by { |row| row[:group] }
 
       expect(result.keys).to contain_exactly("Engineer", "Designer")
       expect(result["Engineer"]).to include(currency: "INR", headcount: 2, min: 100.0, max: 300.0, median: 200.0)

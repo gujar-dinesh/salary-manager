@@ -1,9 +1,4 @@
 class EmployeeSeeder
-  USD_RATES = {
-    "USD" => 1.0, "EUR" => 1.08, "GBP" => 1.27, "INR" => 0.012, "CAD" => 0.73,
-    "AUD" => 0.66, "SGD" => 0.74, "JPY" => 0.0067, "BRL" => 0.18
-  }.freeze
-
   # Share of headcount and pay level relative to the US.
   COUNTRIES = {
     "India" => [ 30, 0.25 ],
@@ -53,9 +48,10 @@ class EmployeeSeeder
     Employee.transaction do
       SalaryChange.delete_all
       Employee.delete_all
-      ExchangeRate.delete_all
+      ReferenceData.load
+      @country_ids = Country.pluck(:name, :id).to_h
+      @usd_rates = Country.joins(:exchange_rate).pluck(:name, :usd_rate).to_h.transform_values(&:to_f)
 
-      ExchangeRate.insert_all!(USD_RATES.map { |currency, rate| { currency: currency, usd_rate: rate, created_at: now, updated_at: now } })
       @count.times.each_slice(1000) do |batch|
         Employee.insert_all!(batch.map { |i| build_row(i, now) })
       end
@@ -70,16 +66,14 @@ class EmployeeSeeder
     country = pick_country
     department = JOBS.keys.sample(random: @random)
     job_title, base_salary = JOBS[department].to_a.sample(random: @random)
-    currency = Country.currency_for(country)
 
     {
       full_name: "#{first} #{last}",
       email: "#{first}.#{last}#{index + 1}@acme.com".downcase,
       job_title: job_title,
       department: department,
-      country: country,
-      currency: currency,
-      salary: local_salary(base_salary, country, currency),
+      country_id: @country_ids.fetch(country),
+      salary: local_salary(base_salary, country),
       employment_type: pick_employment_type,
       hire_date: Date.new(2012, 1, 1) + @random.rand(5300),
       created_at: now,
@@ -102,9 +96,9 @@ class EmployeeSeeder
     "full_time"
   end
 
-  def local_salary(base_salary, country, currency)
+  def local_salary(base_salary, country)
     usd = base_salary * COUNTRIES[country].last * @random.rand(0.8..1.25)
-    local = usd / USD_RATES[currency]
+    local = usd / @usd_rates.fetch(country)
     step = local > 1_000_000 ? 10_000 : 1_000
     ((local / step).round * step).to_i
   end

@@ -2,8 +2,8 @@ require "rails_helper"
 
 RSpec.describe PayrollReport do
   before do
-    create(:exchange_rate, currency: "INR", usd_rate: 0.01)
-    create(:exchange_rate, currency: "EUR", usd_rate: 1.1)
+    set_usd_rate("INR", 0.01)
+    set_usd_rate("EUR", 1.1)
   end
 
   describe ".overview" do
@@ -26,14 +26,6 @@ RSpec.describe PayrollReport do
   end
 
   describe "#totals_by" do
-    it "still counts employees whose currency has no exchange rate" do
-      create(:employee, country: "Japan", salary: 5_000_000)
-
-      row = described_class.new.totals_by(:country).sole
-
-      expect(row).to include(group: "Japan", headcount: 1, payroll_usd: 0.0)
-    end
-
     it "only groups by known columns" do
       expect { described_class.new.totals_by(:email) }.to raise_error(ArgumentError)
     end

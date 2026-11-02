@@ -25,7 +25,7 @@ RSpec.describe "Insights API", type: :request do
   end
 
   it "returns the USD overview" do
-    create(:exchange_rate, currency: "INR", usd_rate: 0.01)
+    set_usd_rate("INR", 0.01)
     create(:employee, country: "India", salary: 1000)
 
     get "/api/insights/overview"

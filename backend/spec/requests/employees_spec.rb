@@ -49,8 +49,6 @@ RSpec.describe "Employees API", type: :request do
     end
 
     it "sorts by the USD equivalent when employees are in different currencies" do
-      create(:exchange_rate, currency: "INR", usd_rate: 0.012)
-      create(:exchange_rate, currency: "USD", usd_rate: 1)
       create(:employee, full_name: "Mumbai", country: "India", salary: 2_000_000)
       create(:employee, full_name: "Austin", country: "United States", salary: 90_000)
 
@@ -126,6 +124,13 @@ RSpec.describe "Employees API", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(json["errors"].keys).to contain_exactly("email", "salary")
     end
+  end
+
+  it "rejects an unknown country" do
+    post "/api/employees", params: { employee: attributes_for(:employee).merge(country: "Atlantis") }
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(json["errors"]).to have_key("country")
   end
 
   describe "PATCH /api/employees/:id" do

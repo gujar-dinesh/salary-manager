@@ -5,7 +5,7 @@ RSpec.describe Employee do
     expect(build(:employee)).to be_valid
   end
 
-  %i[full_name email job_title department country salary hire_date].each do |field|
+  %i[full_name email job_title department salary hire_date].each do |field|
     it "requires #{field}" do
       employee = build(:employee, field => nil)
       expect(employee).not_to be_valid
@@ -41,13 +41,16 @@ RSpec.describe Employee do
     expect(build(:employee, email: "#{"a" * 250}@acme.test")).not_to be_valid
   end
 
-  it "only accepts supported countries" do
-    expect(build(:employee, country: "Atlantis")).not_to be_valid
+  it "requires a known country" do
+    employee = build(:employee, country: "Atlantis")
+
+    expect(employee).not_to be_valid
+    expect(employee.errors[:country]).to be_present
   end
 
-  it "sets the currency from the country" do
-    expect(build(:employee, country: "Germany").tap(&:valid?).currency).to eq("EUR")
-    expect(build(:employee, country: "India").tap(&:valid?).currency).to eq("INR")
+  it "takes its currency from the country" do
+    expect(build(:employee, country: "Germany").currency).to eq("EUR")
+    expect(build(:employee, country: "India").currency).to eq("INR")
   end
 
   it "only accepts known employment types" do
@@ -65,7 +68,7 @@ RSpec.describe Employee do
   describe "database constraints" do
     let(:row) do
       { full_name: "Raw Insert", email: "raw@acme.test", job_title: "Engineer", department: "Engineering",
-        country: "India", currency: "INR", salary: 100, employment_type: "full_time", hire_date: "2024-01-01" }
+        country_id: Country.find_by!(name: "India").id, salary: 100, employment_type: "full_time", hire_date: "2024-01-01" }
     end
 
     it "rejects a non-positive salary even when validations are skipped" do

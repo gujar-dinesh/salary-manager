@@ -1,30 +1,7 @@
-module Country
-  CURRENCIES = {
-    "Australia" => "AUD",
-    "Brazil" => "BRL",
-    "Canada" => "CAD",
-    "France" => "EUR",
-    "Germany" => "EUR",
-    "India" => "INR",
-    "Japan" => "JPY",
-    "Singapore" => "SGD",
-    "United Kingdom" => "GBP",
-    "United States" => "USD"
-  }.freeze
+class Country < ApplicationRecord
+  belongs_to :exchange_rate, foreign_key: :currency, primary_key: :currency
+  has_many :employees, dependent: :restrict_with_error
 
-  def self.names
-    CURRENCIES.keys
-  end
-
-  def self.currencies
-    CURRENCIES.values.uniq
-  end
-
-  def self.supported?(name)
-    CURRENCIES.key?(name)
-  end
-
-  def self.currency_for(name)
-    CURRENCIES[name]
-  end
+  validates :code, presence: true, uniqueness: true, length: { is: 2 }
+  validates :name, presence: true, uniqueness: true
 end
