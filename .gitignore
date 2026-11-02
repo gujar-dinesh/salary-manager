@@ -13,3 +13,4 @@ backend/public/assets
 frontend/node_modules
 frontend/dist
 frontend/coverage
+.claude/

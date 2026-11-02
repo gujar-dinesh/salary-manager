@@ -1,0 +1,40 @@
+import { screen } from '@testing-library/react'
+import { Route, Routes } from 'react-router-dom'
+import { describe, expect, it } from 'vitest'
+import { mockFetch, renderWithProviders } from '../test/render'
+import { EmployeeDetailPage } from './EmployeeDetailPage'
+
+const employee = {
+  id: 7, full_name: 'Lena Fischer', email: 'lena@acme.com', job_title: 'Product Manager',
+  department: 'Product', country: 'Germany', currency: 'EUR', salary: 88000,
+  employment_type: 'full_time', hire_date: '2020-02-03',
+  salary_changes: [{ old_salary: 80000, new_salary: 88000, currency: 'EUR', created_at: '2026-03-01T10:00:00Z' }],
+}
+
+function renderPage() {
+  return renderWithProviders(
+    <Routes>
+      <Route path="/employees/:id" element={<EmployeeDetailPage />} />
+    </Routes>,
+    { route: '/employees/7' },
+  )
+}
+
+describe('EmployeeDetailPage', () => {
+  it('shows the employee and their salary history', async () => {
+    mockFetch({ '/api/employees/options': {}, '/api/employees/7': employee })
+    renderPage()
+
+    expect(await screen.findByRole('heading', { name: 'Lena Fischer' })).toBeInTheDocument()
+    expect(screen.getAllByText('€88,000')).toHaveLength(2)
+    expect(screen.getByText('€80,000')).toBeInTheDocument()
+    expect(screen.getByText('+10.0%')).toBeInTheDocument()
+  })
+
+  it('says when there is no salary history', async () => {
+    mockFetch({ '/api/employees/options': {}, '/api/employees/7': { ...employee, salary_changes: [] } })
+    renderPage()
+
+    expect(await screen.findByText('No salary changes recorded yet.')).toBeInTheDocument()
+  })
+})
