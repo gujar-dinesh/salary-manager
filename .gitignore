@@ -1,0 +1,15 @@
+.DS_Store
+.env*
+
+backend/log/*
+backend/tmp/*
+backend/storage/*.sqlite3*
+backend/config/master.key
+backend/public/assets
+!backend/log/.keep
+!backend/tmp/.keep
+!backend/storage/.keep
+
+frontend/node_modules
+frontend/dist
+frontend/coverage
