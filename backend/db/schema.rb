@@ -58,7 +58,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_090654) do
     t.index ["salary"], name: "index_employees_on_salary"
     t.check_constraint "btrim(full_name::text) <> ''::text", name: "employees_full_name_present"
     t.check_constraint "email::text ~ '^[^@[:space:]]+@[^@[:space:]]+$'::text", name: "employees_email_format"
-    t.check_constraint "employment_type::text = ANY (ARRAY['full_time'::character varying, 'part_time'::character varying, 'contractor'::character varying]::text[])", name: "employees_employment_type_valid"
+    t.check_constraint "employment_type::text = ANY (ARRAY['full_time'::character varying::text, 'part_time'::character varying::text, 'contractor'::character varying::text])", name: "employees_employment_type_valid"
     t.check_constraint "salary > 0::numeric", name: "employees_salary_positive"
   end
 

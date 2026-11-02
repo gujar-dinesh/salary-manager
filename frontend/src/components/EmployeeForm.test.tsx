@@ -85,4 +85,15 @@ describe('EmployeeForm', () => {
       await screen.findByText('Someone else changed this employee while you were editing. Reload the page to see their changes.'),
     ).toBeInTheDocument()
   })
+
+  it('shows server errors for fields that are not on the form', async () => {
+    const onSubmit = vi.fn().mockRejectedValue(new ApiError(422, { base: ['Employee cannot be changed right now'] }))
+    renderWithProviders(
+      <EmployeeForm options={options} initialValues={existing} submitLabel="Save" onSubmit={onSubmit} onCancel={() => {}} />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('Employee cannot be changed right now')).toBeInTheDocument()
+  })
 })

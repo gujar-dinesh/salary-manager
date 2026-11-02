@@ -52,7 +52,11 @@ export function EmployeeForm({ options, initialValues = emptyEmployee, submitLab
       } else if (error instanceof ApiError && error.status === 429) {
         setFailure('Too many changes in a short time. Please wait a minute and try again.')
       } else if (error instanceof ApiError && Object.keys(error.errors).length > 0) {
-        form.setErrors(Object.fromEntries(Object.entries(error.errors).map(([field, messages]) => [field, messages[0]])))
+        const entries = Object.entries(error.errors)
+        const onForm = entries.filter(([field]) => field in emptyEmployee)
+        const elsewhere = entries.filter(([field]) => !(field in emptyEmployee))
+        form.setErrors(Object.fromEntries(onForm.map(([field, messages]) => [field, messages[0]])))
+        if (elsewhere.length > 0) setFailure(elsewhere.flatMap(([, messages]) => messages).join('. '))
       } else {
         setFailure('Could not save the employee. Please try again.')
       }
