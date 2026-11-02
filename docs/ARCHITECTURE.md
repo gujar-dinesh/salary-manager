@@ -216,6 +216,14 @@ frontend from one process group, so there is no CORS and one thing to deploy.
 Verified against the running containers: the 13 e2e tests pass, the load test holds every invariant with 100
 clients (2 workers), and data survives `docker compose down` / `up` without re-seeding.
 
+## Continuous integration
+
+GitHub Actions runs four jobs on every push and pull request: backend (specs, RuboCop, Brakeman, bundler-audit,
+against a Postgres service), frontend (lint, Vitest, typechecked build, npm audit), e2e (Playwright against a
+real Rails server, report kept on failure) and docker (build the image, start the stack with health checks,
+smoke-test `/up`, the seeded headcount and a deep link). Each job was run locally before committing; doing so
+caught a type error that only the build sees and a deep-link route that ignored `Accept: */*` clients.
+
 ## Security
 
 - Brakeman, bundler-audit and npm audit report no issues.

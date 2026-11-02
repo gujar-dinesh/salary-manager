@@ -1,24 +1,10 @@
-# README
+# Salary Manager API
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Rails 8.1 API (PostgreSQL) for the Salary Manager. Setup, commands and Docker usage are in the
+[project README](../README.md); design and trade-offs in [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+```bash
+bin/rails db:setup        # create, load schema, seed 10,000 employees
+bin/rails server          # http://localhost:3000
+bin/ci                    # style, specs, security checks
+```

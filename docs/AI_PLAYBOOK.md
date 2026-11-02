@@ -71,6 +71,11 @@ Rails / RSpec
   `transaction(requires_new: true)`.
 - Concurrency: add `lock_version` from the start, resolve find-or-create lookups inside the save transaction and
   let the unique index decide, and retry once on `RecordNotUnique`. Reproduce races deterministically in specs.
+- Run every CI step locally before pushing, including the typechecked build: Vitest does not typecheck, so a
+  test file can pass and still break `npm run build` and the Docker image.
+- SPA catch-all route: match by "outside /api and no file extension", not `format.html?`; clients sending
+  `Accept: */*` (curl, link previews, monitors) otherwise get 404 on deep links. Smoke-test without headers.
+- A blank `lock_version` param must be dropped: optimistic locking raises (500) on a nil locking column.
 - Put every rule that matters in the database as well (FK, CHECK, unique on `LOWER()`, column limits): bulk
   inserts skip validations.
 

@@ -17,7 +17,7 @@ benchmarking and leadership reporting. Needs accuracy and trust in the numbers m
 | # | Feature | Why it matters |
 |---|---------|----------------|
 | 1 | **Employee directory** — paginated table, search by name/email, filter by country, department, job title; sort by name, salary, hire date | Replaces scrolling an Excel sheet; must stay fast at 10k rows (server-side pagination) |
-| 2 | **Add / edit / delete employee** — full name, email, job title, department, country, salary, currency, employment type, hire date; validated on server and client | The core "manage" job; validation stops the data-quality problems Excel allows |
+| 2 | **Add / edit / delete employee** — full name, email, job title, department, country, salary, employment type, hire date (currency follows the country, decided during the build: see ARCHITECTURE.md); validated on server and client | The core "manage" job; validation stops the data-quality problems Excel allows |
 | 3 | **Salary insights by country** — headcount, min / max / average / median salary | The most common HR question; median is included because averages are skewed by outliers |
 | 4 | **Salary insights by job title within a country** — same stats | Needed for offers and pay-equity checks ("is this offer in range?") |
 | 5 | **Org overview** — headcount & payroll by country and department, normalized to USD | Leadership-level view; comparing across countries needs a common currency |

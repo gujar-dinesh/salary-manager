@@ -1,5 +1,7 @@
 # Salary Manager
 
+[![CI](https://github.com/gujar-dinesh/salary-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/gujar-dinesh/salary-manager/actions/workflows/ci.yml)
+
 A web app for ACME's HR manager to maintain salary data for 10,000 employees across countries and answer
 questions about how the organisation pays people.
 
@@ -87,6 +89,11 @@ DATABASE_NAME=salary_manager_load bin/rails db:prepare db:seed
 DATABASE_NAME=salary_manager_load WRITE_RATE_LIMIT=100000 WEB_CONCURRENCY=4 bin/rails server -p 3200
 ruby script/load_test.rb http://localhost:3200 100   # in another terminal
 ```
+
+Continuous integration (`.github/workflows/ci.yml`) runs on every push and pull request: backend specs, style,
+Brakeman and gem audit against Postgres; frontend lint, tests, typechecked build and npm audit; the Playwright
+suite against a real Rails server; and a Docker build that starts the stack and smoke-tests it. Locally,
+`cd backend && bin/ci` runs the backend checks.
 
 Static checks:
 

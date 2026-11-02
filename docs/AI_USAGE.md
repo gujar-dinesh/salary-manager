@@ -135,3 +135,17 @@ errors for fields not on the form are shown; the load test refuses too few clien
 trailer was removed from its message (history rewritten before the first push, tree unchanged).
 **Verified** locally and against a rebuilt container that migrated its existing data: all specs, e2e tests and
 the load test pass.
+
+### 14. Second review, CI and the brief
+**My direction:** "Review again and check the assignment doc so everything is in place", then "fix and add CI".
+**Review findings fixed:** a blank `lock_version` caused a 500; two data-moving migrations could not be rolled
+back although the docs said they could (now reversible, verified with a data checksum over every employee);
+country names were still case-sensitive in two places (one shared `CaseInsensitiveName` concern now serves
+countries, departments, job titles and the search); an invalid rate-limit setting silently blocked all writes
+(now fails at boot). One finding (a refetch after delete) did not reproduce in a test, so the code was left
+as is and the test kept as a guard.
+**CI:** a GitHub Actions workflow with backend, frontend, e2e and Docker jobs, plus the missing spec step in
+`bin/ci`. Running each job locally first caught two real problems: a test-helper type error that broke the
+typechecked build (and the Docker image), and deep links returning 404 to clients that send `Accept: */*`.
+**Brief check:** everything in the brief is in place except the items that need me: pushing the repository,
+deploying, and recording the demo video.
