@@ -20,6 +20,25 @@ questions about how the organisation pays people.
 - Backend: Ruby 3.3, Rails 8.1 (API mode), PostgreSQL 16, RSpec
 - Frontend: React 19, TypeScript, Vite, Mantine, TanStack Query, Vitest, Testing Library
 
+## Running with Docker
+
+Requirements: Docker with Compose.
+
+```bash
+docker compose up --build
+```
+
+Open http://localhost:8080. The first start creates the database and seeds 10,000 employees; data is kept in a
+Docker volume across restarts (`docker compose down -v` removes it). One image holds the Rails API and the built
+React app; Postgres runs in its own container and is not exposed to the host. Set `APP_PORT` to use another
+port and `SECRET_KEY_BASE` for anything beyond local use.
+
+To run the e2e tests against the container:
+
+```bash
+cd frontend && E2E_BASE_URL=http://localhost:8080 npm run e2e
+```
+
 ## Running locally
 
 Requirements: Ruby 3.3, Node 22 and a running PostgreSQL (16 or newer). Connection settings can be

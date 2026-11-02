@@ -108,3 +108,13 @@ database rule is tested with raw inserts, and a load test checks invariants (no 
 history chain, one row per job title) at 40 and 100 parallel clients.
 **Caught along the way:** the first race spec showed there were two race windows for lookups, not one, which
 changed the fix from "retry the save" to "let the index decide when resolving the name".
+
+### 12. Containerization
+**My direction:** "Containerize the application, run it the Docker way and test it."
+**Outcome:** multi-stage image (Node build, Ruby runtime, non-root), compose with Postgres and health checks,
+Rails serving the built frontend. The same e2e suite and load test ran against the containers and passed.
+**Caught before shipping:** Rails' public file server sends a one-year cache header; applied to `index.html`
+it would keep users on an old release after a deploy, so `index.html` is served separately with `no-cache`.
+`force_ssl` was hard-coded and would redirect plain-HTTP local runs, so it became an environment flag that
+stays on by default.
+**Playbook updated** with the gotchas from the last three rounds so the next project starts with them.

@@ -191,6 +191,24 @@ Puma workers (`WEB_CONCURRENCY`); database connections stay bounded at workers x
 well under Postgres' limit. These numbers show correctness under contention, not production capacity: that
 needs a production build on real hardware.
 
+## Deployment
+
+A multi-stage `Dockerfile` builds the React app with Node, installs gems in a stage that has compilers, and
+copies both into a slim Ruby image (about 390 MB) that runs as a non-root user. Rails serves the API and the
+frontend from one process group, so there is no CORS and one thing to deploy.
+
+- Hashed assets in `public/assets` are cached for a year. `index.html` is served by `FrontendController` with
+  `no-cache`, so users get a new release immediately; the same controller answers client-side routes like
+  `/employees/12`, while unknown `/api/*` paths stay 404.
+- `bin/rails db:prepare` runs on start: it creates and seeds the database the first time and only migrates after.
+- Configuration is by environment: `DATABASE_URL`, `SECRET_KEY_BASE`, `WEB_CONCURRENCY`, `RAILS_MAX_THREADS`,
+  `WRITE_RATE_LIMIT`, and `FORCE_SSL` (on by default; the local compose file turns it off because there is no TLS).
+- `docker-compose.yml` adds Postgres 16 with a health check and a volume; the app waits for it and has its own
+  health check on `/up`.
+
+Verified against the running containers: the 13 e2e tests pass, the load test holds every invariant with 100
+clients (2 workers), and data survives `docker compose down` / `up` without re-seeding.
+
 ## Security
 
 - Brakeman, bundler-audit and npm audit report no issues.
