@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_02_074320) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_02_074338) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -55,7 +55,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_074320) do
     t.decimal "new_salary", precision: 12, scale: 2, null: false
     t.string "currency", null: false
     t.datetime "created_at", null: false
-    t.index ["employee_id"], name: "index_salary_changes_on_employee_id"
+    t.index ["employee_id", "created_at", "id"], name: "index_salary_changes_on_employee_history", order: { created_at: :desc, id: :desc }
     t.check_constraint "old_salary > 0::numeric AND new_salary > 0::numeric", name: "salary_changes_salaries_positive"
   end
 
