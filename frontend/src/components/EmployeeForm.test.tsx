@@ -60,4 +60,15 @@ describe('EmployeeForm', () => {
 
     expect(await screen.findByText('has already been taken')).toBeInTheDocument()
   })
+
+  it('shows a message when the request fails for another reason', async () => {
+    const onSubmit = vi.fn().mockRejectedValue(new ApiError(500))
+    renderWithProviders(
+      <EmployeeForm options={options} initialValues={existing} submitLabel="Save" onSubmit={onSubmit} onCancel={() => {}} />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('Could not save the employee. Please try again.')).toBeInTheDocument()
+  })
 })

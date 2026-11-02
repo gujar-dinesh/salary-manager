@@ -30,6 +30,17 @@ RSpec.describe Employee do
     expect(build(:employee, salary: -10)).not_to be_valid
   end
 
+  it "rejects a salary larger than the column can store" do
+    expect(build(:employee, salary: 10_000_000_000)).not_to be_valid
+  end
+
+  it "limits the length of text fields" do
+    %i[full_name job_title department].each do |field|
+      expect(build(:employee, field => "a" * 101)).not_to be_valid
+    end
+    expect(build(:employee, email: "#{"a" * 250}@acme.test")).not_to be_valid
+  end
+
   it "only accepts supported countries" do
     expect(build(:employee, country: "Atlantis")).not_to be_valid
   end

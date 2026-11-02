@@ -2,6 +2,7 @@ class EmployeeSearch
   SORTABLE = %w[full_name salary hire_date].freeze
   DEFAULT_PER_PAGE = 25
   MAX_PER_PAGE = 100
+  MAX_QUERY_LENGTH = 100
 
   attr_reader :page, :per_page
 
@@ -34,7 +35,7 @@ class EmployeeSearch
     scope = scope.where(job_title: params[:job_title]) if params[:job_title].present?
 
     if params[:q].present?
-      term = "%#{Employee.sanitize_sql_like(params[:q].strip)}%"
+      term = "%#{Employee.sanitize_sql_like(params[:q].strip.first(MAX_QUERY_LENGTH))}%"
       scope = scope.where("full_name LIKE :term OR email LIKE :term", term: term)
     end
 

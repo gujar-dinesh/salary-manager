@@ -1,5 +1,7 @@
 module Api
   class EmployeesController < ApplicationController
+    rate_limit to: 60, within: 1.minute, only: %i[create update destroy]
+
     before_action :set_employee, only: %i[show update destroy]
 
     def index

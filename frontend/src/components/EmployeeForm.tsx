@@ -1,4 +1,4 @@
-import { Autocomplete, Button, Group, NumberInput, Select, SimpleGrid, TextInput } from '@mantine/core'
+import { Autocomplete, Button, Group, NumberInput, Select, SimpleGrid, Text, TextInput } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { useState } from 'react'
 import { ApiError, type EmployeeInput, type EmployeeOptions } from '../api'
@@ -27,6 +27,7 @@ const required = (label: string) => (value: string) => (value.trim() ? null : `$
 
 export function EmployeeForm({ options, initialValues = emptyEmployee, submitLabel, onSubmit, onCancel }: Props) {
   const [saving, setSaving] = useState(false)
+  const [failure, setFailure] = useState<string | null>(null)
   const form = useForm<EmployeeInput>({
     initialValues,
     validate: {
@@ -42,13 +43,16 @@ export function EmployeeForm({ options, initialValues = emptyEmployee, submitLab
 
   const handleSubmit = async (values: EmployeeInput) => {
     setSaving(true)
+    setFailure(null)
     try {
       await onSubmit(values)
     } catch (error) {
-      if (error instanceof ApiError) {
+      if (error instanceof ApiError && error.status === 429) {
+        setFailure('Too many changes in a short time. Please wait a minute and try again.')
+      } else if (error instanceof ApiError && Object.keys(error.errors).length > 0) {
         form.setErrors(Object.fromEntries(Object.entries(error.errors).map(([field, messages]) => [field, messages[0]])))
       } else {
-        throw error
+        setFailure('Could not save the employee. Please try again.')
       }
     } finally {
       setSaving(false)
@@ -72,6 +76,11 @@ export function EmployeeForm({ options, initialValues = emptyEmployee, submitLab
         />
         <TextInput label="Hire date" type="date" withAsterisk {...form.getInputProps('hire_date')} />
       </SimpleGrid>
+      {failure && (
+        <Text c="red" size="sm" mt="md">
+          {failure}
+        </Text>
+      )}
       <Group justify="flex-end" mt="lg">
         <Button variant="default" onClick={onCancel}>
           Cancel

@@ -66,6 +66,15 @@ RSpec.describe "Employees API", type: :request do
       expect(json["employees"].map { |e| e["full_name"] }).to eq(%w[A B])
     end
 
+    it "ignores an overly long search term" do
+      create(:employee, full_name: "Asha Rao")
+
+      get "/api/employees", params: { q: "a" * 500 }
+
+      expect(response).to have_http_status(:ok)
+      expect(json["employees"]).to be_empty
+    end
+
     it "caps the page size" do
       get "/api/employees", params: { per_page: 5000 }
       expect(json["meta"]["per_page"]).to eq(100)
