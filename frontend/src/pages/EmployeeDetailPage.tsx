@@ -2,6 +2,7 @@ import { Anchor, Badge, Button, Card, Group, Modal, SimpleGrid, Stack, Table, Te
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, type Employee, type EmployeeInput, type SalaryChange } from '../api'
 import { refreshEmployeeData } from '../cache'
@@ -26,7 +27,13 @@ export function EmployeeDetailPage() {
   const [editOpened, edit] = useDisclosure(false)
   const [deleteOpened, confirmDelete] = useDisclosure(false)
 
-  const { data: employee, isError } = useQuery({ queryKey: ['employee', id], queryFn: () => api.employee(id) })
+  // Once deleted, stop asking for the employee so removing it from the cache cannot trigger a refetch (404).
+  const [deleted, setDeleted] = useState(false)
+  const { data: employee, isError } = useQuery({
+    queryKey: ['employee', id],
+    queryFn: () => api.employee(id),
+    enabled: !deleted,
+  })
   const { data: options } = useQuery({ queryKey: ['options'], queryFn: api.options })
 
   const updateEmployee = useMutation({
@@ -42,9 +49,10 @@ export function EmployeeDetailPage() {
   const deleteEmployee = useMutation({
     mutationFn: () => api.deleteEmployee(id),
     onSuccess: () => {
-      refreshEmployeeData(queryClient, { deletedId: id })
+      setDeleted(true)
       notifications.show({ message: `${employee?.full_name} deleted` })
       navigate('/')
+      refreshEmployeeData(queryClient, { deletedId: id })
     },
   })
 
