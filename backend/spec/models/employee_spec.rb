@@ -80,8 +80,18 @@ RSpec.describe Employee do
     end
   end
 
-  it "rejects a hire date in the future" do
-    expect(build(:employee, hire_date: Date.current + 1)).not_to be_valid
+  describe "hire date in the future" do
+    it "accepts today's date for a user east of UTC while it is still yesterday in UTC" do
+      travel_to Time.utc(2026, 11, 2, 20, 30) do
+        expect(build(:employee, hire_date: Date.new(2026, 11, 3))).to be_valid
+      end
+    end
+
+    it "rejects a date that has not started anywhere yet" do
+      travel_to Time.utc(2026, 11, 2, 20, 30) do
+        expect(build(:employee, hire_date: Date.new(2026, 11, 4))).not_to be_valid
+      end
+    end
   end
 
   describe "salary history" do

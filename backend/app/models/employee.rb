@@ -27,8 +27,10 @@ class Employee < ApplicationRecord
 
   private
 
+  # The user's "today" may already be tomorrow in UTC, so compare with the latest date anywhere (UTC+14).
   def hire_date_not_in_future
-    errors.add(:hire_date, "can't be in the future") if hire_date&.future?
+    latest_today = Time.current.in_time_zone("Pacific/Kiritimati").to_date
+    errors.add(:hire_date, "can't be in the future") if hire_date && hire_date > latest_today
   end
 
   # Pay changes when the amount or its currency changes; a move between countries that share a
