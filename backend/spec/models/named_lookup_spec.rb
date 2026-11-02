@@ -9,11 +9,18 @@ RSpec.describe NamedLookup do
         expect(model.named("  finance ")).to eq(existing)
       end
 
-      it "returns an unsaved record for a new name" do
+      it "creates a record for a new name" do
         record = model.named("Legal")
 
-        expect(record).to be_new_record
+        expect(record).to be_persisted
         expect(record.name).to eq("Legal")
+      end
+
+      it "returns an invalid name unsaved, with its errors" do
+        record = model.named("a" * 101)
+
+        expect(record).to be_new_record
+        expect(record.errors[:name]).to be_present
       end
 
       it "returns nothing for a blank name" do

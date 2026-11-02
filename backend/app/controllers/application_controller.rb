@@ -8,6 +8,10 @@ class ApplicationController < ActionController::API
            status: :conflict
   end
 
+  rescue_from ActiveRecord::RecordNotUnique do
+    render json: { error: "Another change was saved at the same time. Please try again." }, status: :conflict
+  end
+
   rescue_from ActionController::ParameterMissing do |error|
     render json: { error: error.message }, status: :bad_request
   end

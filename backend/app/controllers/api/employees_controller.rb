@@ -19,9 +19,9 @@ module Api
     end
 
     def create
-      employee = Employee.new(employee_attributes)
+      employee = Employee.new
 
-      if employee.save
+      if save_employee(employee)
         render json: EmployeeSerializer.new(employee, with_history: true), status: :created
       else
         render_errors(employee)
@@ -29,7 +29,7 @@ module Api
     end
 
     def update
-      if @employee.update(employee_attributes)
+      if save_employee(@employee)
         render json: EmployeeSerializer.new(@employee, with_history: true)
       else
         render_errors(@employee)
@@ -54,6 +54,24 @@ module Api
 
     def set_employee
       @employee = Employee.includes(:country, :department, :job_title).find(params[:id])
+    end
+
+    # Lookups and the employee are saved in one transaction. If a parallel request wins a unique index
+    # race (same email), the save is retried once so the conflict shows up as a normal validation error.
+    def save_employee(employee)
+      retried = false
+      begin
+        Employee.transaction do
+          employee.assign_attributes(employee_attributes)
+          employee.save || raise(ActiveRecord::Rollback)
+        end.present?
+      rescue ActiveRecord::RecordNotUnique
+        raise if retried
+
+        retried = true
+        employee.reload if employee.persisted?
+        retry
+      end
     end
 
     def employee_attributes
