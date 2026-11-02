@@ -10,4 +10,7 @@ Rails.application.routes.draw do
   end
 
   get "up" => "rails/health#show", as: :rails_health_check
+
+  root "frontend#index"
+  get "*path", to: "frontend#index", constraints: ->(request) { !request.path.start_with?("/api/") && request.format.html? }
 end

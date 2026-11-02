@@ -40,5 +40,8 @@ module Backend
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # Built by the frontend and copied here in the Docker image; absent in development, where Vite serves it.
+    config.x.frontend_index = Rails.root.join("frontend", "index.html")
   end
 end
