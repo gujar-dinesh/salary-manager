@@ -1,0 +1,38 @@
+[
+  {
+    "id": "intro",
+    "text": "This is Salary Manager, a web app for ACME's HR manager to look after the salaries of ten thousand employees in ten countries, instead of a set of spreadsheets. It is built with Ruby on Rails and PostgreSQL on the back end, and React with TypeScript on the front end."
+  },
+  {
+    "id": "search",
+    "text": "The directory shows all ten thousand seeded employees, twenty five per page, paginated on the server. Search matches a name or an email."
+  },
+  {
+    "id": "filter",
+    "text": "Filters for country, department and job title live in the address bar, so a view can be bookmarked or shared. Within one country, salaries sort by the local amount. Across countries they sort by the US dollar equivalent, so yen and dollars are never compared directly."
+  },
+  {
+    "id": "add",
+    "text": "Adding an employee is validated in the browser and again on the server. The currency follows the country, so the two can never disagree."
+  },
+  {
+    "id": "history",
+    "text": "Every salary change is recorded automatically in an append only history, with the currency on both sides. Edits use optimistic locking: if two HR users change the same person at once, the second is asked to reload instead of silently overwriting the first."
+  },
+  {
+    "id": "countries",
+    "text": "The insights page answers how the organisation pays people: minimum, median, average and maximum salary for each country, in local currency, all computed in the database."
+  },
+  {
+    "id": "job_titles",
+    "text": "Within a country, job titles can be compared side by side. Here is India."
+  },
+  {
+    "id": "overview",
+    "text": "The organisation overview converts payroll to US dollars by country and by department, using stored exchange rates."
+  },
+  {
+    "id": "closing",
+    "text": "Under the hood, the schema is normalized with its rules enforced in PostgreSQL. The code was built test first with RSpec, Vitest and Playwright, a load test checks correctness with a hundred parallel users, and continuous integration and Docker are set up. The design notes, trade offs and a log of how AI was used are in the docs folder. Thanks for watching."
+  }
+]
