@@ -8,8 +8,8 @@ import { EmployeeForm } from '../components/EmployeeForm'
 import { formatEmploymentType, formatMoney } from '../format'
 
 function toInput(employee: Employee): EmployeeInput {
-  const { full_name, email, job_title, department, country, salary, employment_type, hire_date } = employee
-  return { full_name, email, job_title, department, country, salary, employment_type, hire_date }
+  const { full_name, email, job_title, department, country, salary, employment_type, hire_date, lock_version } = employee
+  return { full_name, email, job_title, department, country, salary, employment_type, hire_date, lock_version }
 }
 
 function percentChange(from: number, to: number) {

@@ -169,6 +169,29 @@ RSpec.describe "Employees API", type: :request do
     expect(response).to have_http_status(:bad_request)
   end
 
+  describe "editing the same employee at the same time" do
+    it "rejects a save based on an outdated version" do
+      employee = create(:employee, salary: 100)
+      loaded_version = employee.lock_version
+      employee.update!(salary: 120)
+
+      patch "/api/employees/#{employee.id}", params: { employee: { department: "Sales", salary: 100, lock_version: loaded_version } }
+
+      expect(response).to have_http_status(:conflict)
+      expect(employee.reload.salary).to eq(120)
+      expect(employee.salary_changes.count).to eq(1)
+    end
+
+    it "returns the current version so the next save can use it" do
+      employee = create(:employee)
+
+      patch "/api/employees/#{employee.id}", params: { employee: { salary: 150, lock_version: employee.lock_version } }
+
+      expect(response).to have_http_status(:ok)
+      expect(json["lock_version"]).to eq(employee.lock_version + 1)
+    end
+  end
+
   describe "DELETE /api/employees/:id" do
     it "deletes the employee" do
       employee = create(:employee)

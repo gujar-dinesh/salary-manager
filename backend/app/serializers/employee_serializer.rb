@@ -15,7 +15,8 @@ class EmployeeSerializer
       "currency" => @employee.currency,
       "salary" => @employee.salary.to_f,
       "employment_type" => @employee.employment_type,
-      "hire_date" => @employee.hire_date
+      "hire_date" => @employee.hire_date,
+      "lock_version" => @employee.lock_version
     }
     json["salary_changes"] = salary_changes if @with_history
     json

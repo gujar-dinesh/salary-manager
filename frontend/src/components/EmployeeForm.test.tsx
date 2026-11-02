@@ -21,6 +21,7 @@ const existing = {
   salary: 1200000,
   employment_type: 'full_time' as const,
   hire_date: '2022-04-01',
+  lock_version: 3,
 }
 
 describe('EmployeeForm', () => {
@@ -70,5 +71,18 @@ describe('EmployeeForm', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(await screen.findByText('Could not save the employee. Please try again.')).toBeInTheDocument()
+  })
+
+  it('explains when someone else changed the employee first', async () => {
+    const onSubmit = vi.fn().mockRejectedValue(new ApiError(409))
+    renderWithProviders(
+      <EmployeeForm options={options} initialValues={existing} submitLabel="Save" onSubmit={onSubmit} onCancel={() => {}} />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(
+      await screen.findByText('Someone else changed this employee while you were editing. Reload the page to see their changes.'),
+    ).toBeInTheDocument()
   })
 })

@@ -89,4 +89,26 @@ test.describe('Managing employees', () => {
     await page.goto(`/employees/${employee.id}`)
     await expect(page.getByText('Employee not found.')).toBeVisible()
   })
+
+  test('stops a stale edit from overwriting a newer change', async ({ page, context, request }) => {
+    const employee = await createEmployee(request, { salary: 80000 })
+    const otherTab = await context.newPage()
+    await page.goto(`/employees/${employee.id}`)
+    await otherTab.goto(`/employees/${employee.id}`)
+
+    await otherTab.getByRole('button', { name: 'Edit' }).click()
+    const otherDialog = otherTab.getByRole('dialog', { name: 'Edit employee' })
+    await otherDialog.getByLabel('Annual salary').fill('90000')
+    await otherDialog.getByRole('button', { name: 'Save changes' }).click()
+    await expect(otherTab.getByText('Employee updated')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Edit' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Edit employee' })
+    await dialog.getByLabel('Department').fill('Operations')
+    await dialog.getByRole('button', { name: 'Save changes' }).click()
+
+    await expect(dialog.getByText(/Someone else changed this employee/)).toBeVisible()
+    await page.reload()
+    await expect(page.getByText('€90,000').first()).toBeVisible()
+  })
 })

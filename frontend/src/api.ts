@@ -18,10 +18,13 @@ export interface Employee {
   salary: number
   employment_type: EmploymentType
   hire_date: string
+  lock_version: number
   salary_changes?: SalaryChange[]
 }
 
-export type EmployeeInput = Omit<Employee, 'id' | 'currency' | 'salary_changes'>
+export type EmployeeInput = Omit<Employee, 'id' | 'currency' | 'salary_changes' | 'lock_version'> & {
+  lock_version?: number
+}
 
 export interface EmployeePage {
   employees: Employee[]

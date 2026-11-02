@@ -58,7 +58,7 @@ module Api
 
     def employee_attributes
       EmployeeAttributes.new(
-        params.expect(employee: %i[full_name email job_title department country salary employment_type hire_date])
+        params.expect(employee: %i[full_name email job_title department country salary employment_type hire_date lock_version])
       ).to_h
     end
 

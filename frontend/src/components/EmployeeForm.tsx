@@ -47,7 +47,9 @@ export function EmployeeForm({ options, initialValues = emptyEmployee, submitLab
     try {
       await onSubmit(values)
     } catch (error) {
-      if (error instanceof ApiError && error.status === 429) {
+      if (error instanceof ApiError && error.status === 409) {
+        setFailure('Someone else changed this employee while you were editing. Reload the page to see their changes.')
+      } else if (error instanceof ApiError && error.status === 429) {
         setFailure('Too many changes in a short time. Please wait a minute and try again.')
       } else if (error instanceof ApiError && Object.keys(error.errors).length > 0) {
         form.setErrors(Object.fromEntries(Object.entries(error.errors).map(([field, messages]) => [field, messages[0]])))
