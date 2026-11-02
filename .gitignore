@@ -18,3 +18,8 @@ frontend/test-results
 frontend/playwright-report
 backend/frontend/
 frontend/demo/output
+
+# IDE settings
+.idea/
+*.iml
+.vscode/
