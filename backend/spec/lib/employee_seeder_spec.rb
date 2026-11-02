@@ -23,6 +23,33 @@ RSpec.describe EmployeeSeeder do
     expect(Employee.order(:email).pluck(:email, :country_id, :salary)).to eq(first_run)
   end
 
+  describe ".seed" do
+    it "seeds an empty database in any environment" do
+      expect(described_class.seed(environment: "production", count: 5)).to eq(:seeded)
+      expect(Employee.count).to eq(5)
+    end
+
+    it "refuses to replace existing employees in production" do
+      create(:employee)
+
+      expect(described_class.seed(environment: "production", count: 5)).to eq(:skipped)
+      expect(Employee.count).to eq(1)
+    end
+
+    it "replaces production data only when forced" do
+      create(:employee)
+
+      expect(described_class.seed(environment: "production", force: true, count: 5)).to eq(:seeded)
+      expect(Employee.count).to eq(5)
+    end
+
+    it "always reseeds outside production" do
+      create(:employee)
+
+      expect(described_class.seed(environment: "development", count: 5)).to eq(:seeded)
+    end
+  end
+
   it "replaces existing employees instead of adding to them" do
     create(:employee)
     described_class.new(count: 10).run

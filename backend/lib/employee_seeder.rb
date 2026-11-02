@@ -37,6 +37,14 @@ class EmployeeSeeder
     Sato Schmidt Shah Silva Singh Smith Suzuki Tan Taylor Thomas Wang Watanabe Williams Wilson Wong
   ].freeze
 
+  # Demo data replaces every employee, so production data is only replaced when explicitly forced.
+  def self.seed(environment: Rails.env, force: false, count: 10_000)
+    return :skipped if environment.to_s == "production" && !force && Employee.exists?
+
+    new(count: count).run
+    :seeded
+  end
+
   def initialize(count: 10_000, seed: 42)
     @count = count
     @random = Random.new(seed)
