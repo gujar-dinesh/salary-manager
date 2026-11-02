@@ -6,10 +6,11 @@ module Api
 
     def index
       search = EmployeeSearch.new(params)
+      pagination = Pagination.new(page: params[:page], per_page: params[:per_page])
 
       render json: {
-        employees: search.results.map { |employee| EmployeeSerializer.new(employee) },
-        meta: { page: search.page, per_page: search.per_page, total: search.total, total_pages: search.total_pages }
+        employees: pagination.apply(search.scope).map { |employee| EmployeeSerializer.new(employee) },
+        meta: pagination.meta(search.count)
       }
     end
 
@@ -42,7 +43,7 @@ module Api
 
     def options
       render json: {
-        countries: Employee::CURRENCY_BY_COUNTRY.keys,
+        countries: Country.names,
         departments: Employee.distinct.order(:department).pluck(:department),
         job_titles: Employee.distinct.order(:job_title).pluck(:job_title),
         employment_types: Employee::EMPLOYMENT_TYPES

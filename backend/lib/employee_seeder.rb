@@ -70,7 +70,7 @@ class EmployeeSeeder
     country = pick_country
     department = JOBS.keys.sample(random: @random)
     job_title, base_salary = JOBS[department].to_a.sample(random: @random)
-    currency = Employee::CURRENCY_BY_COUNTRY[country]
+    currency = Country.currency_for(country)
 
     {
       full_name: "#{first} #{last}",

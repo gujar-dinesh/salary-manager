@@ -11,7 +11,7 @@ RSpec.describe EmployeeSeeder do
   it "creates an exchange rate for every currency used" do
     described_class.new(count: 50).run
 
-    expect(ExchangeRate.pluck(:currency)).to match_array(Employee::CURRENCY_BY_COUNTRY.values.uniq)
+    expect(ExchangeRate.pluck(:currency)).to match_array(Country.currencies)
   end
 
   it "produces the same data on every run" do

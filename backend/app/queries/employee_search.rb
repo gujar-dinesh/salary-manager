@@ -1,27 +1,17 @@
 class EmployeeSearch
   SORTABLE = %w[full_name salary hire_date].freeze
-  DEFAULT_PER_PAGE = 25
-  MAX_PER_PAGE = 100
   MAX_QUERY_LENGTH = 100
-
-  attr_reader :page, :per_page
 
   def initialize(params)
     @params = params
-    @page = [ params[:page].to_i, 1 ].max
-    @per_page = params[:per_page].present? ? params[:per_page].to_i.clamp(1, MAX_PER_PAGE) : DEFAULT_PER_PAGE
   end
 
-  def results
-    sorted(filtered).limit(per_page).offset((page - 1) * per_page)
+  def scope
+    sorted(filtered)
   end
 
-  def total
-    @total ||= filtered.count
-  end
-
-  def total_pages
-    (total.to_f / per_page).ceil
+  def count
+    filtered.count
   end
 
   private
@@ -44,15 +34,13 @@ class EmployeeSearch
 
   def sorted(scope)
     column = SORTABLE.include?(params[:sort]) ? params[:sort] : "full_name"
-    direction = params[:direction] == "desc" ? :desc : :asc
+    direction = params[:direction] == "desc" ? "DESC" : "ASC"
 
     # Salaries in different currencies are only comparable once converted to USD.
     if column == "salary" && params[:country].blank?
-      return scope.select("employees.*")
-                  .joins("LEFT JOIN exchange_rates ON exchange_rates.currency = employees.currency")
-                  .order(Arel.sql("employees.salary * COALESCE(exchange_rates.usd_rate, 0) #{direction}"), id: direction)
+      scope.with_usd_salary.order(Arel.sql("#{Employee::USD_SALARY} #{direction} NULLS LAST, employees.id #{direction}"))
+    else
+      scope.order(column => direction.downcase, id: direction.downcase)
     end
-
-    scope.order(column => direction, id: direction)
   end
 end
