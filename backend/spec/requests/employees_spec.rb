@@ -76,6 +76,33 @@ RSpec.describe "Employees API", type: :request do
       expect(json["employees"]).to be_empty
     end
 
+    it "matches filter names regardless of case" do
+      create(:employee, full_name: "Match", country: "Germany", department: "Sales", job_title: "Account Executive")
+
+      get "/api/employees", params: { country: "germany", department: "SALES", job_title: "account executive" }
+
+      expect(json["employees"].map { |e| e["full_name"] }).to eq([ "Match" ])
+    end
+
+    it "handles an absurdly large page number" do
+      create(:employee)
+
+      get "/api/employees", params: { page: "99999999999999999999" }
+
+      expect(response).to have_http_status(:ok)
+      expect(json["employees"]).to be_empty
+    end
+
+    it "ignores parameters sent as arrays or hashes instead of failing" do
+      create(:employee)
+
+      get "/api/employees?q[]=x&per_page[]=5&sort[a]=b&page[]=2"
+
+      expect(response).to have_http_status(:ok)
+      expect(json["employees"].size).to eq(1)
+      expect(json["meta"]["per_page"]).to eq(25)
+    end
+
     it "caps the page size" do
       get "/api/employees", params: { per_page: 5000 }
       expect(json["meta"]["per_page"]).to eq(100)

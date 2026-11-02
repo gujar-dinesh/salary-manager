@@ -18,7 +18,7 @@ class Employee < ApplicationRecord
 
   validates :full_name, presence: true, length: { maximum: 100 }
   validates :hire_date, presence: true
-  validates :email, presence: true, uniqueness: true, length: { maximum: 254 },
+  validates :email, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 254 },
                     format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :salary, presence: true, numericality: { greater_than: 0, less_than: 10_000_000_000 }
   validate :hire_date_not_in_future

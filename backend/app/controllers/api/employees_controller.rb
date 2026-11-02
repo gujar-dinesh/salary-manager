@@ -5,8 +5,10 @@ module Api
     before_action :set_employee, only: %i[show update destroy]
 
     def index
-      search = EmployeeSearch.new(params)
-      pagination = Pagination.new(page: params[:page], per_page: params[:per_page])
+      # permit keeps only scalar values, so arrays or hashes sent by a client are dropped instead of crashing.
+      list_params = params.permit(:q, :country, :department, :job_title, :sort, :direction, :page, :per_page)
+      search = EmployeeSearch.new(list_params)
+      pagination = Pagination.new(page: list_params[:page], per_page: list_params[:per_page])
 
       render json: {
         employees: pagination.apply(search.scope).preload(:country, :department, :job_title).map { |employee| EmployeeSerializer.new(employee) },

@@ -1,11 +1,12 @@
 class Pagination
   DEFAULT_PER_PAGE = 25
   MAX_PER_PAGE = 100
+  MAX_PAGE = 1_000_000
 
   attr_reader :page, :per_page
 
   def initialize(page:, per_page:)
-    @page = [ page.to_i, 1 ].max
+    @page = page.to_i.clamp(1, MAX_PAGE)
     @per_page = per_page.present? ? per_page.to_i.clamp(1, MAX_PER_PAGE) : DEFAULT_PER_PAGE
   end
 

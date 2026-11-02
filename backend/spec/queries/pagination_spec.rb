@@ -12,6 +12,7 @@ RSpec.describe Pagination do
     expect(described_class.new(page: "-3", per_page: "0").page).to eq(1)
     expect(described_class.new(page: "1", per_page: "0").per_page).to eq(1)
     expect(described_class.new(page: "1", per_page: "5000").per_page).to eq(100)
+    expect(described_class.new(page: "99999999999999999999", per_page: nil).page).to eq(Pagination::MAX_PAGE)
   end
 
   it "builds the meta block from a total" do
