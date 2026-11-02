@@ -21,29 +21,9 @@ class SalaryInsights
     }
   end
 
+  # SQLite has no MEDIAN, so salaries are ranked within each group and the middle one or two are averaged.
+  # Everything is computed in a single pass over the employees table.
   def self.stats(scope, column)
-    check_column!(column)
-
-    medians = medians(scope, column)
-    rows = scope.group(column).order(column)
-                .pluck(column, Arel.sql("COUNT(*)"), Arel.sql("MIN(salary)"), Arel.sql("MAX(salary)"),
-                       Arel.sql("AVG(salary)"))
-
-    rows.map do |group, headcount, min, max, average|
-      {
-        group: group,
-        currency: yield(group),
-        headcount: headcount,
-        min: min.to_f.round(2),
-        max: max.to_f.round(2),
-        average: average.to_f.round(2),
-        median: medians[group]
-      }
-    end
-  end
-
-  # SQLite has no MEDIAN, so rank salaries within each group and average the middle one or two rows.
-  def self.medians(scope, column)
     check_column!(column)
 
     ranked = scope.select(
@@ -53,11 +33,26 @@ class SalaryInsights
       "COUNT(*) OVER (PARTITION BY #{column}) AS group_size"
     )
 
-    Employee.unscoped.from(ranked, :ranked)
-            .where("position IN ((group_size + 1) / 2, (group_size + 2) / 2)")
-            .group(:grp)
-            .pluck(:grp, Arel.sql("AVG(salary)"))
-            .to_h { |group, median| [ group, median.to_f.round(2) ] }
+    rows = Employee.unscoped.from(ranked, :ranked).group(:grp).order(:grp).pluck(
+      :grp,
+      Arel.sql("COUNT(*)"),
+      Arel.sql("MIN(salary)"),
+      Arel.sql("MAX(salary)"),
+      Arel.sql("AVG(salary)"),
+      Arel.sql("AVG(CASE WHEN position IN ((group_size + 1) / 2, (group_size + 2) / 2) THEN salary END)")
+    )
+
+    rows.map do |group, headcount, min, max, average, median|
+      {
+        group: group,
+        currency: yield(group),
+        headcount: headcount,
+        min: min.to_f.round(2),
+        max: max.to_f.round(2),
+        average: average.to_f.round(2),
+        median: median.to_f.round(2)
+      }
+    end
   end
 
   def self.usd_totals(column)

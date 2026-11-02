@@ -33,15 +33,15 @@ RSpec.describe SalaryInsights do
     end
   end
 
-  describe ".median" do
-    it "handles odd, even and single-value groups" do
+  describe ".stats" do
+    it "computes the median for odd, even and single-value groups" do
       [ 10, 20, 30 ].each { |s| create(:employee, department: "Odd", salary: s) }
       [ 10, 20, 30, 100 ].each { |s| create(:employee, department: "Even", salary: s) }
       create(:employee, department: "Single", salary: 42)
 
-      medians = described_class.medians(Employee.all, :department)
+      medians = described_class.stats(Employee.all, :department) { nil }.to_h { |row| [ row[:group], row[:median] ] }
 
-      expect(medians).to eq("Odd" => 20.0, "Even" => 25.0, "Single" => 42.0)
+      expect(medians).to eq("Even" => 25.0, "Odd" => 20.0, "Single" => 42.0)
     end
   end
 
