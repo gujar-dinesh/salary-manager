@@ -54,3 +54,23 @@ USD equivalent, with a regression spec.
 **Outcome:** Brakeman, bundler-audit and npm audit were clean. Manual review added input length limits, a
 salary ceiling, a search length cap and rate limiting on writes; verified the limit live (60 x 200, then 429).
 Authentication remains the main known gap and is called out in the docs.
+
+### 7. End-to-end tests
+**My direction:** "Write a few Playwright scripts so the major use cases are covered."
+**Outcome:** 12 tests across directory, add/edit/delete and insights, running against their own seeded
+database and ports. Ran repeatedly to check for flakiness.
+**Found by the e2e tests:**
+- A real bug: failed requests were retried three times, so a deleted employee's page showed "Loading..." for
+  about 7 seconds. 4xx responses are no longer retried.
+- A race in a test: the table keeps the previous page visible while the next loads, so the sort test now polls
+  until the rows are actually sorted.
+
+### 8. PostgreSQL and SOLID
+**My direction:** "Use Postgres, and make sure the design follows SOLID."
+**Postgres:** median now uses `PERCENTILE_CONT`, search moved to `ILIKE` (a spec for case-insensitive search was
+added first, since Postgres `LIKE` is case-sensitive) with trigram indexes. Checked the query plans: at 10,000
+rows Postgres still picks a sequential scan, which is documented rather than claimed as a speedup.
+**SOLID review:** the AI's first pass listed candidate violations; I kept the ones that were real single
+responsibility problems (country data inside `Employee`, pagination inside search, one insights class doing two
+jobs, duplicated USD SQL) and dropped dependency injection for controllers as ceremony. Same treatment for the
+frontend employees page (filters hook and table component).

@@ -50,5 +50,5 @@ benchmarking and leadership reporting. Needs accuracy and trust in the numbers m
 - Works in current desktop browsers; usable on a laptop screen.
 
 ## Tech choices (summary — details in `docs/ARCHITECTURE.md`)
-Ruby on Rails (API mode) · SQLite · RSpec · React + TypeScript (Vite) · Mantine UI · TanStack Query · Vitest + Testing Library.
+Ruby on Rails (API mode) · PostgreSQL (started on SQLite, see `ARCHITECTURE.md`) · RSpec · React + TypeScript (Vite) · Mantine UI · TanStack Query · Vitest + Testing Library.
 Chosen to match the role (Rails, TDD, React/TypeScript) and keep the stack simple to run and deploy.

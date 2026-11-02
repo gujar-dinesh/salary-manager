@@ -3,7 +3,7 @@
 ## Overview
 
 ```
-React SPA (Vite)  --/api-->  Rails API  -->  SQLite
+React SPA (Vite)  --/api-->  Rails API  -->  PostgreSQL
   Mantine UI                  controllers -> query objects -> ActiveRecord
   TanStack Query cache        serializers
 ```
@@ -31,11 +31,34 @@ Decisions:
 
 ## Backend structure
 
-- `EmployeeSearch` (query object) owns filtering, search, sorting and pagination. Sort columns are whitelisted
-  and page size is capped at 100.
-- `SalaryInsights` (query object) owns all aggregates. Grouping columns are whitelisted.
-- `EmployeeSerializer` keeps the JSON shape in one place, out of the controller.
-- Controllers stay thin: parse params, call a query object or model, render.
+Each class has one reason to change:
+
+| Class | Responsibility |
+|-------|----------------|
+| `Employee` | validation, normalisation, recording salary changes |
+| `Country` | supported countries and their currencies (reference data) |
+| `EmployeeSearch` | filtering, text search and sorting of the directory |
+| `Pagination` | page and page-size rules, limit/offset, meta block; not tied to employees |
+| `SalaryStatistics` | salary distribution (min, median, average, max) in local currency |
+| `PayrollReport` | headcount and payroll converted to USD |
+| `EmployeeSerializer` | JSON shape of an employee |
+| controllers | parse params, call one of the above, render |
+
+Notes on SOLID:
+
+- **Single responsibility** drove the splits above. Earlier versions had the country table inside `Employee`
+  (used from five places), pagination inside `EmployeeSearch`, and one `SalaryInsights` class doing both local
+  statistics and USD reporting.
+- **Open/closed:** adding a sortable column or a new breakdown is a one-line change to a whitelist
+  (`EmployeeSearch::SORTABLE`, `SalaryStatistics::GROUPABLE`). The USD conversion lives in one scope,
+  `Employee.with_usd_salary`, used by both the directory sort and the payroll report.
+- Liskov and interface segregation have little to act on here: there are no inheritance hierarchies beyond
+  ActiveRecord. Injecting query objects into controllers (dependency inversion) was considered and left out;
+  in Rails it adds wiring without making anything easier to test, since each query object is already tested on
+  its own.
+
+Frontend follows the same idea: `useEmployeeFilters` owns URL filter state, `EmployeeTable` only renders,
+and the page composes them with data fetching.
 
 ## API
 
@@ -50,6 +73,13 @@ Decisions:
 | GET | /api/insights/overview | headcount and payroll in USD by country and department |
 
 Validation errors return `422` with `{ errors: { field: [messages] } }`, which the form maps onto its fields.
+
+## Database
+
+The project started on SQLite to keep setup trivial, then moved to PostgreSQL: it is what a real deployment of
+salary data would use, and it brings a native median (`PERCENTILE_CONT`), case-insensitive `ILIKE` and trigram
+indexes. Migrations stayed portable; only the search and median SQL changed. Dev, test and e2e each use their
+own database.
 
 ## Performance
 
@@ -66,11 +96,10 @@ What was done, based on `EXPLAIN QUERY PLAN`:
 
 - **Everything is aggregated in SQL**, never by loading rows into Ruby. Memory use per request is one page of
   employees or one row per group.
-- **Median in one pass.** SQLite has no MEDIAN, so salaries are ranked with `ROW_NUMBER()` inside each group
-  and the middle one or two are averaged. Min, max, average and median come from the same query; the first
-  version used two queries per table.
+- **Median in the same query** as min, max and average, using `PERCENTILE_CONT(0.5)`. (On SQLite this needed
+  a `ROW_NUMBER()` window workaround; the first version used two queries per table.)
 - **Indexes for sorting.** Sorting by salary or hire date originally scanned the table and built a temporary
-  sort tree for every page. Indexes on `salary`, `hire_date` and `(country, salary)` let SQLite walk the index
+  sort tree for every page. Indexes on `salary`, `hire_date` and `(country, salary)` let the database walk the index
   instead. `(country, job_title)` serves country filters and the job title breakdown.
 - **Seeding uses `insert_all` in batches of 1,000**, so 10,000 rows take under a second and memory stays flat.
 - **Frontend** uses server-side pagination, debounced search (300 ms) and keeps the previous page on screen
@@ -80,8 +109,9 @@ Considered and left out:
 
 - **Caching insights.** The queries take milliseconds; a cache would add invalidation logic and a risk of stale
   numbers for no visible gain at this size. Worth revisiting at 10x the data.
-- **Full-text search.** `LIKE '%term%'` cannot use an index, but scanning 10,000 rows is fast. SQLite FTS5 is
-  the next step if the dataset grows a lot.
+- **Full-text search.** Search uses `ILIKE '%term%'` backed by `pg_trgm` GIN indexes on name and email. At
+  10,000 rows Postgres still prefers a sequential scan (about 10 ms either way); the indexes are there so search
+  keeps working as the table grows. Postgres full-text search would only be needed for word-level matching.
 - **Keyset pagination.** Offset pagination is simple and fine for ~400 pages.
 
 ## Correctness note: sorting across currencies

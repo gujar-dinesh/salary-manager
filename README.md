@@ -17,17 +17,18 @@ questions about how the organisation pays people.
 
 ## Stack
 
-- Backend: Ruby 3.3, Rails 8.1 (API mode), SQLite, RSpec
+- Backend: Ruby 3.3, Rails 8.1 (API mode), PostgreSQL 16, RSpec
 - Frontend: React 19, TypeScript, Vite, Mantine, TanStack Query, Vitest, Testing Library
 
 ## Running locally
 
-Requirements: Ruby 3.3 and Node 22.
+Requirements: Ruby 3.3, Node 22 and a running PostgreSQL (16 or newer). Connection settings can be
+overridden with `DATABASE_HOST`, `DATABASE_USER` and `DATABASE_PASSWORD`; production reads `DATABASE_URL`.
 
 ```bash
 cd backend
 bundle install
-bin/rails db:setup   # creates the database and seeds 10,000 employees
+bin/rails db:setup   # creates the databases and seeds 10,000 employees
 bin/rails server     # http://localhost:3000
 ```
 
@@ -48,7 +49,7 @@ cd frontend && npm test
 ```
 
 End-to-end tests (Playwright) start their own Rails server on port 3100 with a separate, freshly seeded
-database, and a Vite server on port 5180, so they do not touch development data:
+database (`salary_manager_e2e`), and a Vite server on port 5180, so they do not touch development data:
 
 ```bash
 cd frontend
@@ -70,14 +71,16 @@ cd frontend && npm run lint && npm audit
 
 ```
 backend/
-  app/models/          Employee, SalaryChange, ExchangeRate
-  app/queries/         EmployeeSearch (list filters/sort/paging), SalaryInsights (aggregates)
+  app/models/          Employee, SalaryChange, ExchangeRate, Country
+  app/queries/         EmployeeSearch, Pagination, SalaryStatistics, PayrollReport
   app/serializers/     EmployeeSerializer
   app/controllers/api/ employees and insights endpoints
   lib/employee_seeder.rb
 frontend/
   src/api.ts           typed API client
   src/pages/           Employees, EmployeeDetail, Insights
-  src/components/      EmployeeForm
+  src/components/      EmployeeForm, EmployeeTable
+  src/hooks/           useEmployeeFilters (filter state in the URL)
+  e2e/                 Playwright tests
 docs/
 ```
