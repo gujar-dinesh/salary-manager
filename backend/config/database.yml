@@ -1,6 +1,7 @@
 default: &default
   adapter: postgresql
   encoding: unicode
+  template: template0
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   host: <%= ENV["DATABASE_HOST"] %>
   username: <%= ENV["DATABASE_USER"] %>
