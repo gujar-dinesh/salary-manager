@@ -35,14 +35,25 @@ RSpec.describe "Employees API", type: :request do
       expect(json["employees"].map { |e| e["full_name"] }).to eq([ "Match" ])
     end
 
-    it "sorts by salary descending" do
+    it "sorts by salary within a country" do
       create(:employee, full_name: "Low", salary: 100)
       create(:employee, full_name: "High", salary: 300)
       create(:employee, full_name: "Mid", salary: 200)
 
-      get "/api/employees", params: { sort: "salary", direction: "desc" }
+      get "/api/employees", params: { country: "India", sort: "salary", direction: "desc" }
 
       expect(json["employees"].map { |e| e["full_name"] }).to eq(%w[High Mid Low])
+    end
+
+    it "sorts by the USD equivalent when employees are in different currencies" do
+      create(:exchange_rate, currency: "INR", usd_rate: 0.012)
+      create(:exchange_rate, currency: "USD", usd_rate: 1)
+      create(:employee, full_name: "Mumbai", country: "India", salary: 2_000_000)
+      create(:employee, full_name: "Austin", country: "United States", salary: 90_000)
+
+      get "/api/employees", params: { sort: "salary", direction: "desc" }
+
+      expect(json["employees"].map { |e| e["full_name"] }).to eq(%w[Austin Mumbai])
     end
 
     it "ignores unknown sort columns" do

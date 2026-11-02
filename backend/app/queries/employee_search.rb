@@ -12,7 +12,7 @@ class EmployeeSearch
   end
 
   def results
-    filtered.order(order_clause).limit(per_page).offset((page - 1) * per_page)
+    sorted(filtered).limit(per_page).offset((page - 1) * per_page)
   end
 
   def total
@@ -41,9 +41,17 @@ class EmployeeSearch
     scope
   end
 
-  def order_clause
+  def sorted(scope)
     column = SORTABLE.include?(params[:sort]) ? params[:sort] : "full_name"
     direction = params[:direction] == "desc" ? :desc : :asc
-    { column => direction, id: direction }
+
+    # Salaries in different currencies are only comparable once converted to USD.
+    if column == "salary" && params[:country].blank?
+      return scope.select("employees.*")
+                  .joins("LEFT JOIN exchange_rates ON exchange_rates.currency = employees.currency")
+                  .order(Arel.sql("employees.salary * COALESCE(exchange_rates.usd_rate, 0) #{direction}"), id: direction)
+    end
+
+    scope.order(column => direction, id: direction)
   end
 end
