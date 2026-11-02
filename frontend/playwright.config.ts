@@ -18,7 +18,7 @@ export default defineConfig({
     {
       command: `bin/rails db:prepare db:seed && bin/rails server -p ${API_PORT} -P tmp/pids/e2e.pid`,
       cwd: '../backend',
-      env: { DATABASE_PATH: 'storage/e2e.sqlite3' },
+      env: { DATABASE_NAME: 'salary_manager_e2e' },
       url: `http://localhost:${API_PORT}/up`,
       timeout: 120_000,
     },

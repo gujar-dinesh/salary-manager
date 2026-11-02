@@ -21,25 +21,16 @@ class SalaryInsights
     }
   end
 
-  # SQLite has no MEDIAN, so salaries are ranked within each group and the middle one or two are averaged.
-  # Everything is computed in a single pass over the employees table.
   def self.stats(scope, column)
     check_column!(column)
 
-    ranked = scope.select(
-      "#{column} AS grp",
-      :salary,
-      "ROW_NUMBER() OVER (PARTITION BY #{column} ORDER BY salary) AS position",
-      "COUNT(*) OVER (PARTITION BY #{column}) AS group_size"
-    )
-
-    rows = Employee.unscoped.from(ranked, :ranked).group(:grp).order(:grp).pluck(
-      :grp,
+    rows = scope.group(column).order(column).pluck(
+      column,
       Arel.sql("COUNT(*)"),
       Arel.sql("MIN(salary)"),
       Arel.sql("MAX(salary)"),
       Arel.sql("AVG(salary)"),
-      Arel.sql("AVG(CASE WHEN position IN ((group_size + 1) / 2, (group_size + 2) / 2) THEN salary END)")
+      Arel.sql("PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary)")
     )
 
     rows.map do |group, headcount, min, max, average, median|

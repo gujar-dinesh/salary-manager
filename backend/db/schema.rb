@@ -10,7 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_02_065733) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_02_070618) do
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "hstore"
+  enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_trgm"
+
   create_table "employees", force: :cascade do |t|
     t.string "full_name", null: false
     t.string "email", null: false
@@ -27,7 +32,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_065733) do
     t.index ["country", "salary"], name: "index_employees_on_country_and_salary"
     t.index ["department"], name: "index_employees_on_department"
     t.index ["email"], name: "index_employees_on_email", unique: true
+    t.index ["email"], name: "index_employees_on_email_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["full_name"], name: "index_employees_on_full_name"
+    t.index ["full_name"], name: "index_employees_on_full_name_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["hire_date"], name: "index_employees_on_hire_date"
     t.index ["job_title"], name: "index_employees_on_job_title"
     t.index ["salary"], name: "index_employees_on_salary"
@@ -42,7 +49,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_065733) do
   end
 
   create_table "salary_changes", force: :cascade do |t|
-    t.integer "employee_id", null: false
+    t.bigint "employee_id", null: false
     t.decimal "old_salary", precision: 12, scale: 2, null: false
     t.decimal "new_salary", precision: 12, scale: 2, null: false
     t.string "currency", null: false

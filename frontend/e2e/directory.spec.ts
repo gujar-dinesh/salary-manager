@@ -48,19 +48,18 @@ test.describe('Employee directory', () => {
   test('sorts by salary in both directions', async ({ page }) => {
     await page.goto('/?country=India')
     const salaries = async () => (await page.locator('tbody tr td:nth-child(5)').allTextContents()).map(parseMoney)
+    const isSorted = (values: number[], direction: 1 | -1) =>
+      values.every((value, i) => i === 0 || (value - values[i - 1]) * direction >= 0)
 
     await page.getByRole('button', { name: /Salary/ }).click()
     await expect(page).toHaveURL(/sort=salary&direction=asc/)
-    await expect(page.getByRole('button', { name: /Salary ▲/ })).toBeVisible()
-    const ascending = await salaries()
-    expect(ascending).toEqual([...ascending].sort((a, b) => a - b))
+    await expect.poll(async () => isSorted(await salaries(), 1)).toBe(true)
+    const lowest = (await salaries())[0]
 
     await page.getByRole('button', { name: /Salary/ }).click()
     await expect(page).toHaveURL(/direction=desc/)
-    await expect(page.getByRole('button', { name: /Salary ▼/ })).toBeVisible()
-    const descending = await salaries()
-    expect(descending).toEqual([...descending].sort((a, b) => b - a))
-    expect(descending[0]).toBeGreaterThan(ascending[0])
+    await expect.poll(async () => isSorted(await salaries(), -1)).toBe(true)
+    expect((await salaries())[0]).toBeGreaterThan(lowest)
   })
 
   test('shows an empty state when nothing matches', async ({ page }) => {

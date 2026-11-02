@@ -36,7 +36,7 @@ class EmployeeSearch
 
     if params[:q].present?
       term = "%#{Employee.sanitize_sql_like(params[:q].strip.first(MAX_QUERY_LENGTH))}%"
-      scope = scope.where("full_name LIKE :term OR email LIKE :term", term: term)
+      scope = scope.where("full_name ILIKE :term OR email ILIKE :term", term: term)
     end
 
     scope

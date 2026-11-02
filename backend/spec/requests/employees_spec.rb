@@ -23,6 +23,9 @@ RSpec.describe "Employees API", type: :request do
 
       get "/api/employees", params: { q: "ben.r" }
       expect(json["employees"].map { |e| e["full_name"] }).to eq([ "Ben Stone" ])
+
+      get "/api/employees", params: { q: "ASHA" }
+      expect(json["employees"].map { |e| e["full_name"] }).to eq([ "Asha Rao" ])
     end
 
     it "filters by country, department and job title" do

@@ -3,7 +3,7 @@
 
 backend/log/*
 backend/tmp/*
-backend/storage/*.sqlite3*
+backend/storage/*
 backend/config/master.key
 backend/public/assets
 !backend/log/.keep
