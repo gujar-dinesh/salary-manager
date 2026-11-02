@@ -74,3 +74,11 @@ rows Postgres still picks a sequential scan, which is documented rather than cla
 responsibility problems (country data inside `Employee`, pagination inside search, one insights class doing two
 jobs, duplicated USD SQL) and dropped dependency injection for controllers as ceremony. Same treatment for the
 frontend employees page (filters hook and table component).
+
+### 9. Playbook for next time
+**My direction:** "Be more careful with tokens; write a rule book so the next assessment doesn't repeat work
+or miss deliverables."
+**Outcome:** `docs/AI_PLAYBOOK.md` (also installed as a personal Claude Code skill) and a project `CLAUDE.md`.
+**Lesson recorded:** most rework here came from decisions made mid-way (SQLite to PostgreSQL, a SOLID pass
+after the code was written). The playbook asks those questions in the first prompt, lists the gotchas that cost
+debugging time, and sets token rules (batch commands, narrow test runs, measure before optimizing).

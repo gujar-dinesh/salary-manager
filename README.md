@@ -5,7 +5,7 @@ questions about how the organisation pays people.
 
 - Requirements: [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)
 - Architecture and trade-offs: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- How AI was used: [docs/AI_USAGE.md](docs/AI_USAGE.md)
+- How AI was used: [docs/AI_USAGE.md](docs/AI_USAGE.md), rules for AI agents: [CLAUDE.md](CLAUDE.md), reusable playbook: [docs/AI_PLAYBOOK.md](docs/AI_PLAYBOOK.md)
 
 ## Features
 
