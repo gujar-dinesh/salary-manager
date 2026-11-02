@@ -25,7 +25,7 @@ export function renderWithProviders(ui: ReactNode, { route = '/', entries, index
 }
 
 export function mockFetch(routes: Record<string, unknown>) {
-  const fetchMock = vi.fn(async (url: string) => {
+  const fetchMock = vi.fn(async (url: string, _options?: RequestInit) => {
     const path = Object.keys(routes)
       .sort((a, b) => b.length - a.length)
       .find((key) => url.startsWith(key))
