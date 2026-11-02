@@ -6,12 +6,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': process.env.API_URL ?? 'http://localhost:3000',
     },
   },
   test: {
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: false,
+    include: ['src/**/*.test.{ts,tsx}'],
   },
 })

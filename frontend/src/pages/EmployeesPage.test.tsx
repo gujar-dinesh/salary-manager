@@ -29,7 +29,7 @@ describe('EmployeesPage', () => {
 
     expect(await screen.findByRole('link', { name: 'Asha Rao' })).toHaveAttribute('href', '/employees/1')
     expect(screen.getByText('₹1,200,000')).toBeInTheDocument()
-    expect(screen.getByText('1 employees')).toBeInTheDocument()
+    expect(screen.getByText('1 employee')).toBeInTheDocument()
   })
 
   it('sends the search term to the API', async () => {

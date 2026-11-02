@@ -135,7 +135,7 @@ export function EmployeesPage() {
       {data && data.meta.total > 0 && (
         <Group justify="space-between">
           <Text size="sm" c="dimmed">
-            {data.meta.total.toLocaleString()} employees
+            {data.meta.total.toLocaleString()} {data.meta.total === 1 ? 'employee' : 'employees'}
           </Text>
           <Pagination total={data.meta.total_pages} value={filters.page}
             onChange={(page) => updateParam('page', String(page))} />

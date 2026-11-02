@@ -47,6 +47,18 @@ cd backend && bundle exec rspec
 cd frontend && npm test
 ```
 
+End-to-end tests (Playwright) start their own Rails server on port 3100 with a separate, freshly seeded
+database, and a Vite server on port 5180, so they do not touch development data:
+
+```bash
+cd frontend
+npx playwright install chromium   # first time only
+npm run e2e
+```
+
+They cover browsing, search, filters, sorting and pagination, adding an employee (with validation and duplicate
+email), editing a salary and seeing it in the history, deleting an employee, and the insights pages.
+
 Static checks:
 
 ```bash
