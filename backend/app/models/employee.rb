@@ -6,7 +6,6 @@ class Employee < ApplicationRecord
   belongs_to :country
   belongs_to :department, validate: true
   belongs_to :job_title, validate: true
-  has_one :exchange_rate, through: :country
   has_many :salary_changes, -> { order(created_at: :desc, id: :desc) }, dependent: :delete_all
 
   scope :with_usd_salary, -> { joins(country: :exchange_rate) }

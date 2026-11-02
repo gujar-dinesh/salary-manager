@@ -1,16 +1,16 @@
 class EmployeeSeeder
-  # Share of headcount and pay level relative to the US.
+  # Share of headcount and pay level relative to the US, by ISO country code (see ReferenceData).
   COUNTRIES = {
-    "India" => [ 30, 0.25 ],
-    "United States" => [ 25, 1.0 ],
-    "United Kingdom" => [ 10, 0.8 ],
-    "Germany" => [ 8, 0.8 ],
-    "Canada" => [ 7, 0.8 ],
-    "France" => [ 5, 0.7 ],
-    "Australia" => [ 5, 0.85 ],
-    "Singapore" => [ 4, 0.75 ],
-    "Japan" => [ 3, 0.6 ],
-    "Brazil" => [ 3, 0.35 ]
+    "IN" => [ 30, 0.25 ],
+    "US" => [ 25, 1.0 ],
+    "GB" => [ 10, 0.8 ],
+    "DE" => [ 8, 0.8 ],
+    "CA" => [ 7, 0.8 ],
+    "FR" => [ 5, 0.7 ],
+    "AU" => [ 5, 0.85 ],
+    "SG" => [ 4, 0.75 ],
+    "JP" => [ 3, 0.6 ],
+    "BR" => [ 3, 0.35 ]
   }.freeze
 
   # Base annual salary in USD for a US employee.
@@ -60,8 +60,8 @@ class EmployeeSeeder
       Department.delete_all
       ReferenceData.load
       create_departments_and_job_titles
-      @country_ids = Country.pluck(:name, :id).to_h
-      @usd_rates = Country.joins(:exchange_rate).pluck(:name, :usd_rate).to_h.transform_values(&:to_f)
+      @country_ids = Country.pluck(:code, :id).to_h
+      @usd_rates = Country.joins(:exchange_rate).pluck(:code, :usd_rate).to_h.transform_values(&:to_f)
 
       @count.times.each_slice(1000) do |batch|
         Employee.insert_all!(batch.map { |i| build_row(i, now) })
