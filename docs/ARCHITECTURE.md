@@ -13,17 +13,51 @@ built frontend can be served by Rails or any static host in front of it.
 
 ## Data model
 
-| Table | Columns | Notes |
-|-------|---------|-------|
-| employees | full_name, email (unique), job_title, department, country, currency, salary (decimal 12,2), employment_type, hire_date | currency is derived from country |
-| salary_changes | employee_id, old_salary, new_salary, currency, created_at | append-only audit trail, deleted with the employee |
-| exchange_rates | currency (unique), usd_rate | static rates used for USD comparisons |
+```
+exchange_rates (currency UNIQUE, usd_rate)
+      ^ currency
+countries      (code UNIQUE, name UNIQUE, currency)
+      ^ country_id
+employees      (full_name, email UNIQUE, salary, employment_type, hire_date,
+                country_id, department_id, job_title_id)  --> departments (name, unique ignoring case)
+      |                                                    --> job_titles  (name, unique ignoring case)
+      v employee_id
+salary_changes (old_salary, new_salary, currency, created_at)   append-only
+```
+
+The schema is in third normal form. It started as one wide `employees` table with country, currency,
+department and job title as strings; currency depended on country (a transitive dependency) and repeated
+strings meant typos split the insights. Two migrations moved these into their own tables and backfilled
+existing rows, so they work on a database that already holds data.
+
+Integrity is enforced by the database, not only by Rails, because bulk inserts (the seeder, a future import)
+skip validations:
+
+- foreign keys on every reference, including `countries.currency -> exchange_rates.currency`, so every
+  employee has an exchange rate and USD reports never silently drop people
+- check constraints: `salary > 0`, `employment_type` in the allowed values, positive salaries in history
+- unique indexes: email, country code and name, department and job title names (case-insensitive)
+- reference rows cannot be deleted while employees use them (`restrict_with_error`)
+
+Intentional redundancy, kept on purpose:
+
+- `salary_changes.currency` records the currency at the time of the change, so history stays correct if an
+  employee moves country.
+- `salary_changes.old_salary` could be derived from the previous row, but each audit row reads on its own.
 
 Decisions:
 
-- **Currency follows country.** The requirements listed currency as an editable field. While building the form
-  it was clear that letting HR pick "Germany + INR" only creates bad data, so currency is set from the country
-  on save. A supported-countries list lives in `Employee::CURRENCY_BY_COUNTRY`.
+- **Currency follows country.** The requirements listed currency as an editable field. Letting HR pick
+  "Germany + INR" only creates bad data, so currency now lives on `countries` and employees reach it through
+  their country.
+- **The API keeps using names** (`country=India`, `department=Engineering`). `EmployeeAttributes` resolves them
+  to records. Departments and job titles are matched ignoring case and spacing, and a new name creates a new
+  row together with the employee, so HR can still add a job title from the form without creating duplicates.
+- **Job titles are not tied to a department**, because the same title (for example "Analyst") can exist in
+  several departments.
+- **Rails conventions:** associations (`belongs_to` with `validate: true` for lookups that may be new,
+  `has_one :exchange_rate, through: :country`), an `enum` for employment type, and audit rows that are
+  read-only once saved.
 - **Salary history via a model callback.** `after_update` records a change whenever salary changes. A service
   object was considered, but a callback guarantees the audit row is written no matter which code path updates
   the employee (API, console, future import job).
@@ -36,7 +70,9 @@ Each class has one reason to change:
 | Class | Responsibility |
 |-------|----------------|
 | `Employee` | validation, normalisation, recording salary changes |
-| `Country` | supported countries and their currencies (reference data) |
+| `Country`, `Department`, `JobTitle` | reference data; the latter two share the `NamedLookup` concern |
+| `EmployeeAttributes` | turns API params that use names into model attributes |
+| `ReferenceData` | loads countries and exchange rates for seeds and tests |
 | `EmployeeSearch` | filtering, text search and sorting of the directory |
 | `Pagination` | page and page-size rules, limit/offset, meta block; not tied to employees |
 | `SalaryStatistics` | salary distribution (min, median, average, max) in local currency |
@@ -46,8 +82,8 @@ Each class has one reason to change:
 
 Notes on SOLID:
 
-- **Single responsibility** drove the splits above. Earlier versions had the country table inside `Employee`
-  (used from five places), pagination inside `EmployeeSearch`, and one `SalaryInsights` class doing both local
+- **Single responsibility** drove the splits above. Earlier versions had a hard-coded country list inside
+  `Employee` (used from five places), pagination inside `EmployeeSearch`, and one `SalaryInsights` class doing both local
   statistics and USD reporting.
 - **Open/closed:** adding a sortable column or a new breakdown is a one-line change to a whitelist
   (`EmployeeSearch::SORTABLE`, `SalaryStatistics::GROUPABLE`). The USD conversion lives in one scope,

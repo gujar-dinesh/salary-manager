@@ -82,3 +82,16 @@ or miss deliverables."
 **Lesson recorded:** most rework here came from decisions made mid-way (SQLite to PostgreSQL, a SOLID pass
 after the code was written). The playbook asks those questions in the first prompt, lists the gotchas that cost
 debugging time, and sets token rules (batch commands, narrow test runs, measure before optimizing).
+
+### 10. Data model review and normalization
+**My direction:** asked for a review from a data-structure angle, then "are the tables well normalized?" and
+"did we apply associations, callbacks and validations?". Chose which items to do from the resulting list.
+**Findings I acted on:** currency depended on country (third normal form violation); department and job title
+were repeated strings; rules lived only in Rails although the seeder bypasses validations; `ExchangeRate` was
+joined with raw SQL instead of an association; a stray `hstore` extension came from the local `template1`.
+**Changes:** check constraints and an enum; append-only salary history with an index matching its sort order;
+`countries`, `departments` and `job_titles` tables with migrations that backfill existing rows.
+**Decided by me:** the API keeps using names so the frontend and e2e tests did not change and could prove the
+refactor; job titles are shared across departments.
+**Caught by tests:** Rails `belongs_to` does not validate a new associated record by default, so an over-long
+job title passed validation; fixed with `validate: true`.

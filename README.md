@@ -71,7 +71,7 @@ cd frontend && npm run lint && npm audit
 
 ```
 backend/
-  app/models/          Employee, SalaryChange, ExchangeRate, Country
+  app/models/          Employee, SalaryChange, ExchangeRate, Country, Department, JobTitle
   app/queries/         EmployeeSearch, Pagination, SalaryStatistics, PayrollReport
   app/serializers/     EmployeeSerializer
   app/controllers/api/ employees and insights endpoints

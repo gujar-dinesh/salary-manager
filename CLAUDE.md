@@ -19,6 +19,7 @@ Requirements, design and trade-offs are in `docs/`.
 
 ## Structure
 - `app/queries`: EmployeeSearch, Pagination, SalaryStatistics, PayrollReport
-- `app/models/country.rb`: supported countries and currencies
+- `app/models`: Country, Department, JobTitle are reference tables; `lib/reference_data.rb` loads countries and rates
+- The API uses names for reference data; `EmployeeAttributes` resolves them to records
 - `app/serializers`: JSON shapes
 - `frontend/src/hooks/useEmployeeFilters.ts`: filter state lives in the URL
