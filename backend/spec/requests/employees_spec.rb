@@ -172,6 +172,14 @@ RSpec.describe "Employees API", type: :request do
     expect(JobTitle.pluck(:name)).to include("Staff Engineer")
   end
 
+  it "accepts a country name in any case" do
+    post "/api/employees", params: { employee: attributes_for(:employee).merge(country: "india", department: "Engineering",
+                                                                              job_title: "Software Engineer") }
+
+    expect(response).to have_http_status(:created)
+    expect(json["country"]).to eq("India")
+  end
+
   it "rejects an unknown country" do
     post "/api/employees", params: { employee: attributes_for(:employee).merge(country: "Atlantis") }
 
@@ -207,6 +215,15 @@ RSpec.describe "Employees API", type: :request do
       expect(response).to have_http_status(:conflict)
       expect(employee.reload.salary).to eq(120)
       expect(employee.salary_changes.count).to eq(1)
+    end
+
+    it "treats a blank version as not sent" do
+      employee = create(:employee)
+
+      patch "/api/employees/#{employee.id}", params: { employee: { department: "Sales", lock_version: "" } }
+
+      expect(response).to have_http_status(:ok)
+      expect(json["department"]).to eq("Sales")
     end
 
     it "returns the current version so the next save can use it" do

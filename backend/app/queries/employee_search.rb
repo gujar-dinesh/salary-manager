@@ -20,9 +20,9 @@ class EmployeeSearch
 
   def filtered
     scope = Employee.all
-    scope = scope.where(country_id: named(Country, params[:country])) if params[:country].present?
-    scope = scope.where(department_id: named(Department, params[:department])) if params[:department].present?
-    scope = scope.where(job_title_id: named(JobTitle, params[:job_title])) if params[:job_title].present?
+    scope = scope.where(country_id: Country.with_name(params[:country]).select(:id)) if params[:country].present?
+    scope = scope.where(department_id: Department.with_name(params[:department]).select(:id)) if params[:department].present?
+    scope = scope.where(job_title_id: JobTitle.with_name(params[:job_title]).select(:id)) if params[:job_title].present?
 
     if params[:q].present?
       term = "%#{Employee.sanitize_sql_like(params[:q].strip.first(MAX_QUERY_LENGTH))}%"
@@ -30,11 +30,6 @@ class EmployeeSearch
     end
 
     scope
-  end
-
-  # Reference names are matched ignoring case, the same way they are resolved when saving.
-  def named(model, name)
-    model.where("LOWER(name) = LOWER(?)", name).select(:id)
   end
 
   def sorted(scope)

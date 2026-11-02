@@ -6,7 +6,9 @@ class EmployeeAttributes
 
   def to_h
     attributes = @params.to_h.symbolize_keys
-    attributes[:country] = Country.find_by(name: attributes[:country]) if attributes.key?(:country)
+    # A blank version means the client did not send one; nil would break optimistic locking.
+    attributes.delete(:lock_version) if attributes[:lock_version].blank?
+    attributes[:country] = Country.find_named(attributes[:country]) if attributes.key?(:country)
     attributes[:department] = Department.named(attributes[:department]) if attributes.key?(:department)
     attributes[:job_title] = JobTitle.named(attributes[:job_title]) if attributes.key?(:job_title)
     attributes

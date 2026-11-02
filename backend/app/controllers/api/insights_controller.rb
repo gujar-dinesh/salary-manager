@@ -5,7 +5,7 @@ module Api
     end
 
     def job_titles
-      country = Country.find_by(name: params[:country])
+      country = Country.find_named(params[:country])
       return render json: { error: "Unknown country" }, status: :bad_request unless country
 
       render json: SalaryStatistics.by_job_title(country)

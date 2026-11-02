@@ -19,6 +19,15 @@ RSpec.describe "Insights API", type: :request do
     expect(json.first).to include("group" => "Engineer", "currency" => "INR")
   end
 
+  it "accepts the country name in any case" do
+    create(:employee, country: "India", job_title: "Engineer", salary: 100)
+
+    get "/api/insights/job_titles", params: { country: "india" }
+
+    expect(response).to have_http_status(:ok)
+    expect(json.first).to include("group" => "Engineer")
+  end
+
   it "requires a supported country for job title stats" do
     get "/api/insights/job_titles", params: { country: "Atlantis" }
     expect(response).to have_http_status(:bad_request)

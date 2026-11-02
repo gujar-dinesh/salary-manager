@@ -3,6 +3,8 @@ module NamedLookup
   extend ActiveSupport::Concern
 
   included do
+    include CaseInsensitiveName
+
     normalizes :name, with: ->(name) { name.squish }
 
     validates :name, presence: true, length: { maximum: 100 }
@@ -17,10 +19,6 @@ module NamedLookup
       return if name.empty?
 
       find_named(name) || create_named(name)
-    end
-
-    def find_named(name)
-      where("LOWER(name) = LOWER(?)", name).first
     end
 
     private

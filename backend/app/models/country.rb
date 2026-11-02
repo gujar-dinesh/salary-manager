@@ -1,4 +1,6 @@
 class Country < ApplicationRecord
+  include CaseInsensitiveName
+
   belongs_to :exchange_rate, foreign_key: :currency, primary_key: :currency
   has_many :employees, dependent: :restrict_with_error
 
