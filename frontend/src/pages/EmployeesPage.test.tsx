@@ -1,5 +1,6 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { mockFetch, renderWithProviders } from '../test/render'
 import { EmployeesPage } from './EmployeesPage'
@@ -60,5 +61,36 @@ describe('EmployeesPage', () => {
     renderWithProviders(<EmployeesPage />)
 
     expect(await screen.findByText('No employees match these filters.')).toBeInTheDocument()
+  })
+
+  function History() {
+    const navigate = useNavigate()
+    const location = useLocation()
+    return (
+      <>
+        <button onClick={() => navigate(-1)}>Back</button>
+        <output aria-label="location">{location.pathname + location.search}</output>
+      </>
+    )
+  }
+
+  it('restores the previous search when going back', async () => {
+    mockFetch({ '/api/employees/options': options, '/api/employees': page })
+    renderWithProviders(<><EmployeesPage /><History /></>, { entries: ['/?q=one', '/?q=two'] })
+
+    expect(screen.getByLabelText('Search')).toHaveValue('two')
+    await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+
+    expect(screen.getByLabelText('Search')).toHaveValue('one')
+  })
+
+  it('does not add a history entry for every keystroke', async () => {
+    mockFetch({ '/api/employees/options': options, '/api/employees': page })
+    renderWithProviders(<><EmployeesPage /><History /></>, { entries: ['/insights', '/'] })
+
+    await userEvent.type(screen.getByLabelText('Search'), 'abc')
+    await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+
+    expect(screen.getByLabelText('location')).toHaveTextContent('/insights')
   })
 })

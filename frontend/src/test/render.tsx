@@ -5,13 +5,20 @@ import type { ReactNode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { vi } from 'vitest'
 
-export function renderWithProviders(ui: ReactNode, { route = '/' } = {}) {
+interface RenderOptions {
+  route?: string
+  entries?: string[]
+  index?: number
+}
+
+export function renderWithProviders(ui: ReactNode, { route = '/', entries, index }: RenderOptions = {}) {
+  const history = entries ?? [route]
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
   return render(
     <QueryClientProvider client={queryClient}>
       <MantineProvider env="test">
-        <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+        <MemoryRouter initialEntries={history} initialIndex={index ?? history.length - 1}>{ui}</MemoryRouter>
       </MantineProvider>
     </QueryClientProvider>,
   )
