@@ -22,7 +22,7 @@ employees      (full_name, email UNIQUE, salary, employment_type, hire_date,
                 country_id, department_id, job_title_id)  --> departments (name, unique ignoring case)
       |                                                    --> job_titles  (name, unique ignoring case)
       v employee_id
-salary_changes (old_salary, new_salary, currency, created_at)   append-only
+salary_changes (old_salary, old_currency, new_salary, new_currency, created_at)   append-only
 ```
 
 The schema is in third normal form. It started as one wide `employees` table with country, currency,
@@ -33,7 +33,7 @@ existing rows, so they work on a database that already holds data.
 Integrity is enforced by the database, not only by Rails, because bulk inserts (the seeder, a future import)
 skip validations:
 
-- foreign keys on every reference, including `countries.currency` and `salary_changes.currency` to
+- foreign keys on every reference, including `countries.currency` and both salary history currencies to
   `exchange_rates`, so every employee has an exchange rate and USD reports never silently drop people
 - check constraints: `salary > 0`, `employment_type` in the allowed values, positive salaries in history,
   positive exchange rates, email shape, no blank names, ISO formats for country (`AB`) and currency (`ABC`) codes
@@ -42,12 +42,18 @@ skip validations:
 - `spec/models/database_constraints_spec.rb` proves each rule by attempting raw inserts that skip Rails
 
 "Hire date not in the future" stays in Rails: Postgres check constraints must be immutable, and "today" is not.
+It compares with the latest calendar date anywhere (UTC+14), so a user east of UTC can always enter their today.
+
+Seeding replaces all employees, so in production `db:seed` only fills an empty database; replacing existing data
+needs `RESET_DEMO_DATA=1`. Every migration can be rolled back (checked by rolling back and re-migrating to an
+identical schema).
 - reference rows cannot be deleted while employees use them (`restrict_with_error`)
 
 Intentional redundancy, kept on purpose:
 
-- `salary_changes.currency` records the currency at the time of the change, so history stays correct if an
-  employee moves country.
+- `salary_changes.old_currency` / `new_currency` record the currency on each side of a change, so a move to
+  another country is recorded correctly (and a move to a new currency with the same amount still counts as a
+  pay change). The UI shows a percentage only when both sides use the same currency.
 - `salary_changes.old_salary` could be derived from the previous row, but each audit row reads on its own.
 
 Decisions:

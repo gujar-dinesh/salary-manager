@@ -118,3 +118,20 @@ it would keep users on an old release after a deploy, so `index.html` is served 
 `force_ssl` was hard-coded and would redirect plain-HTTP local runs, so it became an environment flag that
 stays on by default.
 **Playbook updated** with the gotchas from the last three rounds so the next project starts with them.
+
+### 13. Full code review and fixes
+**My direction:** "Do a thorough code review", then "fix all 15".
+**Review:** run at the highest effort over every commit since the requirements doc. Three crash cases were
+confirmed live before reporting (huge page number, array parameters).
+**Most important findings:** salary history labelled the old amount with the new currency when an employee
+moved country (an audit trail error); `db:seed` would wipe production data; the hire-date check used UTC and
+rejected "today" for users in India, Japan or Australia for part of each day.
+**Fixed test-first, one commit per theme:** history stores both currencies; seeding never replaces production
+data unless forced; hire date compared with the latest date on Earth; list params accept only scalars and the
+page is clamped; filters and email uniqueness match names ignoring case (the uniqueness check now uses the
+`LOWER(email)` index); the last migration is reversible (verified by a rollback/migrate round trip); search no
+longer floods browser history and follows Back; every write refreshes lists, options and insights; server
+errors for fields not on the form are shown; the load test refuses too few clients; an early commit's co-author
+trailer was removed from its message (history rewritten before the first push, tree unchanged).
+**Verified** locally and against a rebuilt container that migrated its existing data: all specs, e2e tests and
+the load test pass.

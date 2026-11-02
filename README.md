@@ -58,7 +58,7 @@ npm run dev          # http://localhost:5173, proxies /api to the Rails server
 ```
 
 To reset the data at any time: `bin/rails db:seed`. The seed is deterministic, so every run produces the
-same employees.
+same employees. In production it only seeds an empty database unless `RESET_DEMO_DATA=1` is set.
 
 ## Tests
 
