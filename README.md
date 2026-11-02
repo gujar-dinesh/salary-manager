@@ -5,6 +5,7 @@
 A web app for ACME's HR manager to maintain salary data for 10,000 employees across countries and answer
 questions about how the organisation pays people.
 
+- Demo video (1:52, narrated): [docs/demo/salary-manager-demo.mp4](docs/demo/salary-manager-demo.mp4)
 - Requirements: [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)
 - Architecture and trade-offs: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - How AI was used: [docs/AI_USAGE.md](docs/AI_USAGE.md), rules for AI agents: [CLAUDE.md](CLAUDE.md), reusable playbook: [docs/AI_PLAYBOOK.md](docs/AI_PLAYBOOK.md)
@@ -97,7 +98,7 @@ suite against a real Rails server; and a Docker build that starts the stack and 
 
 Demo video: `frontend/demo/make-video.sh` builds a narrated walkthrough from `frontend/demo/narration.json`
 (macOS `say` for the voice, Playwright for the recording, ffmpeg to merge) against a fresh Docker stack, and
-writes `frontend/demo/output/salary-manager-demo.mp4`. Edit the narration and rerun; each scene lasts as long
+writes `frontend/demo/output/salary-manager-demo.mp4` (the committed copy is `docs/demo/salary-manager-demo.mp4`). Edit the narration and rerun; each scene lasts as long
 as its narration. `VOICE=Rishi` picks another voice.
 
 Static checks:
