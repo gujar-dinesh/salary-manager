@@ -31,9 +31,11 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ruby/setup-ruby@v1
         with:
+          # Runner images ship only the latest patch of each series; .ruby-version pins 3.3.x locally.
+          ruby-version: "3.3"
           working-directory: backend
           bundler-cache: true
       - name: Prepare database
@@ -53,7 +55,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
           node-version-file: frontend/.nvmrc
@@ -81,9 +83,11 @@ jobs:
         ports: ["5432:5432"]
         options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ruby/setup-ruby@v1
         with:
+          # Runner images ship only the latest patch of each series; .ruby-version pins 3.3.x locally.
+          ruby-version: "3.3"
           working-directory: backend
           bundler-cache: true
       - uses: actions/setup-node@v4
@@ -112,7 +116,7 @@ jobs:
     needs: [backend, frontend]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build and start the stack
         run: docker compose up --build --detach --wait --wait-timeout 180
       - name: Smoke test
