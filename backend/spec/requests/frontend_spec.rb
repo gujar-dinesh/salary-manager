@@ -23,6 +23,19 @@ RSpec.describe "Serving the built frontend", type: :request do
     end
   end
 
+  it "serves deep links to clients that accept anything" do
+    get "/employees/12", headers: { "Accept" => "*/*" }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Salary Manager")
+  end
+
+  it "does not answer missing asset files with the app" do
+    get "/assets/missing.js", headers: { "Accept" => "*/*" }
+
+    expect(response).to have_http_status(:not_found)
+  end
+
   it "leaves unknown API paths as JSON 404s" do
     get "/api/nothing-here"
 

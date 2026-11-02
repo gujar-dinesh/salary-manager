@@ -12,5 +12,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "frontend#index"
-  get "*path", to: "frontend#index", constraints: ->(request) { !request.path.start_with?("/api/") && request.format.html? }
+  # Client-side routes: anything outside /api that is not a file (no extension), whatever the Accept header.
+  get "*path", to: "frontend#index", format: false,
+               constraints: ->(request) { !request.path.start_with?("/api/") && !request.path.match?(/\.\w+\z/) }
 end
