@@ -1,4 +1,5 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { mockFetch, renderWithProviders } from '../test/render'
@@ -52,5 +53,18 @@ describe('EmployeeDetailPage', () => {
     renderPage()
 
     expect(await screen.findByText('No salary changes recorded yet.')).toBeInTheDocument()
+  })
+
+  it('does not fetch the employee again after deleting them', async () => {
+    const fetchMock = mockFetch({ '/api/employees/options': {}, '/api/employees/7': employee })
+    renderPage()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+    await userEvent.click(screen.getAllByRole('button', { name: 'Delete' }).at(-1)!)
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/employees/7', expect.objectContaining({ method: 'DELETE' })))
+    await new Promise((resolve) => setTimeout(resolve, 50))
+
+    const reads = fetchMock.mock.calls.filter(([url, options]) => url === '/api/employees/7' && !options?.method)
+    expect(reads).toHaveLength(1)
   })
 })
